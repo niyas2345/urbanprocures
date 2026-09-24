@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Portal | Urban Procures</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/css/styles.css" />
+<link rel="stylesheet" href="/css/platform.css" /><script src="/js/routes.js"></script></head>
+<body data-page="client.html">
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <img class="logo-mark" src="/assets/logo-mark.png" width="36" height="40" alt="" aria-hidden="true" />
+        <span class="brand-name">Urban Procures</span>
+      </div>
+      <nav class="nav">
+        <span class="lab">Platform</span>
+        <button onclick="navigateTo('index')">Home</button>
+        <button onclick="navigateTo('how')">How it works</button>
+        <button onclick="navigateTo('public-rfq')">Get Quotes</button>
+        <button onclick="navigateTo('vendors')">Vendors</button>
+        <span class="lab">Account</span>
+        <button onclick="navigateTo('signin')">Sign In</button>
+        <button class="active">Client Portal</button>
+      </nav>
+      <div class="side-foot">
+        <article class="trust"><strong>Client Benefits</strong><span>Post unlimited RFQs, manage projects, full audit trail.</span></article>
+        <article class="trust accent"><strong>Free Forever</strong><span>No charges for clients — ever.</span></article>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <div class="row" style="justify-content:flex-end;align-items:center">
+        <button class="ghost" type="button" onclick="navigateTo('signin')">Sign in</button>
+        <button class="menu" id="menuBtn" type="button" aria-label="Open navigation">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">For Contractors & Builders</p>
+          <h1>Client Portal</h1>
+          <p class="sub">Register as a client to post RFQs, manage projects, and track awards — all for free.</p>
+        </div>
+      </header>
+
+      <div class="g3">
+        <div class="panel" style="text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;margin-bottom:.5rem">🏗</div>
+          <strong style="font-size:1rem">Post Unlimited RFQs</strong>
+          <p class="muted" style="font-size:.82rem;margin-top:.5rem">Create as many RFQs as you need. No limits, no fees.</p>
+        </div>
+        <div class="panel" style="text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;margin-bottom:.5rem">📊</div>
+          <strong style="font-size:1rem">Compare Quotes</strong>
+          <p class="muted" style="font-size:.82rem;margin-top:.5rem">AI-assisted comparison of vendor quotations side by side.</p>
+        </div>
+        <div class="panel" style="text-align:center;padding:1.5rem">
+          <div style="font-size:2rem;margin-bottom:.5rem">📋</div>
+          <strong style="font-size:1rem">Full Audit Trail</strong>
+          <p class="muted" style="font-size:.82rem;margin-top:.5rem">Complete timeline of every action for compliance and disputes.</p>
+        </div>
+      </div>
+
+      <div style="max-width:600px;width:100%;margin:0 auto">
+        <div class="panel">
+          <header>
+            <h3>Create Client Account</h3>
+            <span class="chip new">Free — No verification</span>
+          </header>
+          <form id="clientForm" style="display:grid;gap:1rem;margin-top:1rem">
+            <div class="form-group">
+              <label for="companyName">Company Name *</label>
+              <input type="text" id="companyName" name="companyName" placeholder="Your company or personal name" required />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="contactPerson">Contact Person *</label>
+                <input type="text" id="contactPerson" name="contactPerson" placeholder="Full name" required />
+              </div>
+              <div class="form-group">
+                <label for="phone">Phone *</label>
+                <input type="tel" id="phone" name="phone" placeholder="+971 50 123 4567" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="email">Email Address *</label>
+              <input type="email" id="email" name="email" placeholder="you@company.com" required />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="password">Password *</label>
+                <input type="password" id="password" name="password" placeholder="Min 8 characters" required minlength="8" />
+              </div>
+              <div class="form-group">
+                <label for="confirmPassword">Confirm Password *</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="city">City</label>
+                <select id="city" name="city">
+                  <option value="">Select</option>
+                  <option value="dubai">Dubai</option>
+                  <option value="abu-dhabi">Abu Dhabi</option>
+                  <option value="sharjah">Sharjah</option>
+                  <option value="ajman">Ajman</option>
+                  <option value="rak">Ras Al Khaimah</option>
+                  <option value="fujairah">Fujairah</option>
+                  <option value="uaq">Umm Al Quwain</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="companyType">I am a...</label>
+                <select id="companyType" name="companyType">
+                  <option value="contractor">Contractor</option>
+                  <option value="developer">Developer</option>
+                  <option value="consultant">Consultant</option>
+                  <option value="owner">Property Owner</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div style="padding:1rem;border:1px solid #d4f0d4;border-radius:10px;background:#f0fff0">
+              <div style="display:flex;align-items:flex-start;gap:.75rem">
+                <span style="font-size:1.5rem">✅</span>
+                <div>
+                  <strong style="font-size:.9rem">No Verification Required</strong>
+                  <p style="font-size:.82rem;color:var(--ink-soft);margin-top:.25rem">Start posting RFQs immediately after registration. No trade licence or documents needed.</p>
+                </div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3>Terms &amp; Conditions</h3>
+              <p style="font-size:.85rem;margin-bottom:.75rem">
+                <a href="/terms/client" target="_blank" style="color:var(--orange);font-weight:700">Read full Client Terms &amp; Conditions ↗</a>
+              </p>
+              <div class="clickwrap-check" style="margin-top:.75rem">
+                <input type="checkbox" id="clientClickwrapAccept" name="clientClickwrapAccept" required />
+                <label for="clientClickwrapAccept">
+                  I have read, understood, and agree to the <a href="/terms/client" target="_blank" style="color:var(--orange)">Urban Procures Client Terms and Conditions</a>.
+                </label>
+              </div>
+            </div>
+            <p class="form-msg" id="clientFormMsg" hidden></p>
+            <button type="submit" id="submitClientRegistration" class="btn" style="width:100%" disabled>Create Client Account</button>
+            <p style="text-align:center;font-size:.85rem">
+              Already have an account? <a href="/signin" style="color:var(--orange);font-weight:700">Sign In</a>
+            </p>
+          </form>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:1rem">
+        <header>
+          <h3>How it works for Clients</h3>
+        </header>
+        <div class="g3" style="margin-top:1rem">
+          <div class="how-step" style="flex-direction:column;text-align:center;padding:1rem">
+            <div class="step-num" style="width:2.5rem;height:2.5rem">1</div>
+            <strong style="margin-top:.5rem">Register Free</strong>
+            <p class="muted" style="font-size:.78rem;margin-top:.25rem">Sign up with just your email and phone.</p>
+          </div>
+          <div class="how-step" style="flex-direction:column;text-align:center;padding:1rem">
+            <div class="step-num" style="width:2.5rem;height:2.5rem">2</div>
+            <strong style="margin-top:.5rem">Get Unlimited Quotes</strong>
+            <p class="muted" style="font-size:.78rem;margin-top:.25rem">Create projects and receive vendor quotes.</p>
+          </div>
+          <div class="how-step" style="flex-direction:column;text-align:center;padding:1rem">
+            <div class="step-num" style="width:2.5rem;height:2.5rem">3</div>
+            <strong style="margin-top:.5rem">Award & Manage</strong>
+            <p class="muted" style="font-size:.78rem;margin-top:.25rem">Compare quotes and award projects.</p>
+          </div>
+        </div>
+      </div>
+
+      <footer class="site panel" style="margin-top:1rem">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="brand">
+              <img class="logo-mark" src="/assets/logo-mark.png" width="36" height="40" alt="" aria-hidden="true" />
+              <span class="brand-name">Urban Procures</span>
+            </div>
+            <span class="muted" style="font-size:.8rem">Dubai, UAE</span>
+          </div>
+          <nav class="footer-col">
+            <strong>Platform</strong>
+            <button onclick="navigateTo('index')">Home</button>
+            <button onclick="navigateTo('how')">How it works</button>
+            <button onclick="navigateTo('public-rfq')">Get Quotes</button>
+            <button onclick="navigateTo('vendors')">Vendors</button>
+          </nav>
+          <nav class="footer-col">
+            <strong>Legal</strong>
+            <button onclick="navigateTo('terms-client')">Client terms</button>
+            <button onclick="navigateTo('terms-vendor')">Vendor terms</button>
+            <button onclick="navigateTo('privacy')">Privacy</button>
+          </nav>
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <script>
+    function navigateTo(page) {
+      var name = !page || page === 'home' ? 'index' : String(page).replace(/\.html$/i, '');
+      window.location.href = window.urbanRoute(name);
+    }
+    window.navigateTo = navigateTo;
+  </script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

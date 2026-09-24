@@ -1,0 +1,40 @@
+/**
+ * Urban Procure commercial fee calculation.
+ * This module calculates the platform service fee; invoicing remains a separate concern.
+ */
+
+export const DEFAULT_SERVICE_FEE = Object.freeze({
+  minimumAed: 500,
+  percentage: 0.025,
+  currency: 'AED',
+});
+
+export function calculateServiceFee(orderValue, rules = DEFAULT_SERVICE_FEE) {
+  const value = Number(orderValue);
+  if (!Number.isFinite(value) || value < 0) throw new Error('A valid non-negative order value is required');
+
+  const percentageFee = value * Number(rules.percentage);
+  const fee = Math.max(Number(rules.minimumAed), percentageFee);
+
+  return {
+    currency: rules.currency ?? 'AED',
+    orderValue: value,
+    minimumFee: Number(rules.minimumAed),
+    percentage: Number(rules.percentage),
+    percentageFee: Number(percentageFee.toFixed(2)),
+    serviceFee: Number(fee.toFixed(2)),
+    vatApplicable: true,
+    calculationBasis: 'total_lpo_work_order_value',
+    paymentTrigger: 'first_payment_stage',
+  };
+}
+
+export function validateOrderForFeeTrigger(order) {
+  const acceptedTypes = ['lpo', 'purchase_order', 'work_order', 'equivalent_written_order'];
+  if (!acceptedTypes.includes(order?.type)) throw new Error('Unsupported order type for service fee trigger');
+  if (!order?.rfqId) throw new Error('RFQ reference is required');
+  if (!Number.isFinite(Number(order?.totalValue)) || Number(order.totalValue) < 0) {
+    throw new Error('A valid total order value is required');
+  }
+  return true;
+}

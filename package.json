@@ -1,0 +1,25 @@
+{
+  "name": "urban-procure",
+  "private": true,
+  "version": "1.0.0",
+  "description": "URBAN PROCURE RFQ marketplace interface for clients, vendors, and platform owners",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/frontend-build.mjs && node scripts/prepare-sites-build.mjs",
+    "test:preview-assets": "node scripts/check-sites-assets.mjs",
+    "preview": "vite preview",
+    "test": "node --test $(find server test src/lib -name '*.test.js' | sort)",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "vite": "^5.4.0"
+  }
+}

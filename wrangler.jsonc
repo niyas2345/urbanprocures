@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "urban-procure",
+  "compatibility_date": "2026-08-29",
+  "pages_build_output_dir": "dist",
+  "d1_databases": [
+    {
+      "binding": "URBAN_PROCURE_DB",
+      "database_name": "urban-procure-db",
+      "database_id": "15f861d6-4a86-445e-b56a-66d1b3bc04ba"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "URBAN_PROCURE_RFQ_DOCUMENTS",
+      "bucket_name": "urban-procure-rfq-documents"
+    },
+    {
+      "binding": "URBAN_PROCURE_QUOTE_DOCUMENTS",
+      "bucket_name": "urban-procure-quote-documents"
+    }
+  ],
+  "vars": {
+    "CAPACITY_RFQ_WARNING": "100",
+    "CAPACITY_RFQ_HARD_LIMIT": "250",
+    "CAPACITY_STORAGE_WARNING_GB": "8",
+    "CAPACITY_STORAGE_HARD_LIMIT_GB": "10",
+    "PLATFORM_BILLING_MODE": "free",
+    "SUPABASE_URL": "https://vdlrwekoyvvspxuyzgrx.supabase.co",
+    "SUPABASE_ANON_KEY": "sb_publishable_0a8D88dOZPmHe_PHLCnBcg_2h6P7U6u"
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.sites-runtime/
+.env
+.env.*
+.DS_Store
+__MACOSX/
+playwright-report/
+test-results/

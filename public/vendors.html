@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vendors | Urban Procures</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/css/styles.css" />
+<link rel="stylesheet" href="/css/platform.css" /><script src="/js/routes.js"></script></head>
+<body data-page="vendors.html">
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <img class="logo-mark" src="/assets/logo-mark.png" width="36" height="40" alt="" aria-hidden="true" />
+        <span class="brand-name">Urban Procures</span>
+      </div>
+      <nav class="nav">
+        <span class="lab">Platform</span>
+        <button onclick="navigateTo('index')">Home</button>
+        <button onclick="navigateTo('how')">How it works</button>
+        <button onclick="navigateTo('public-rfq')">Get Quotes</button>
+        <button class="active">Vendors</button>
+        <span class="lab">Account</span>
+        <button onclick="navigateTo('signup#vendor')">Vendor sign up</button>
+        <button onclick="navigateTo('signin')">Sign In</button>
+      </nav>
+    </aside>
+
+    <section class="workspace">
+      <div class="row" style="justify-content:flex-end;align-items:center">
+        <button class="ghost" type="button" onclick="navigateTo('signin')">Sign in</button>
+        <button class="menu" id="menuBtn" type="button" aria-label="Open navigation">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Verified suppliers</p>
+          <h1>Vendor Directory</h1>
+          <p class="sub">Browse verified UAE construction suppliers and contractors.</p>
+        </div>
+        <div class="row">
+          <button class="btn" type="button" onclick="navigateTo('signup')">Register as Vendor</button>
+        </div>
+      </header>
+
+      <!-- Filters -->
+      <div class="panel">
+        <div class="row" style="gap:.75rem">
+          <div class="form-group" style="flex:1;min-width:200px">
+            <input type="text" id="searchVendor" placeholder="Search by company name..." style="padding:.6rem .8rem;border:1px solid var(--line);border-radius:10px;width:100%" />
+          </div>
+          <div class="form-group" style="min-width:150px">
+            <select id="filterCategory" style="padding:.6rem .8rem;border:1px solid var(--line);border-radius:10px;width:100%">
+              <option value="">All Categories</option>
+              <option value="civil">Civil Works</option>
+              <option value="mep">MEP</option>
+              <option value="electrical">Electrical</option>
+              <option value="hvac">HVAC</option>
+              <option value="finishing">Finishing</option>
+              <option value="manpower">Manpower</option>
+              <option value="materials">Materials</option>
+            </select>
+          </div>
+          <div class="form-group" style="min-width:120px">
+            <select id="filterStatus" style="padding:.6rem .8rem;border:1px solid var(--line);border-radius:10px;width:100%">
+              <option value="verified">Verified Only</option>
+              <option value="all">All Vendors</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vendor Grid -->
+      <div class="g3" id="vendorGrid">
+        <p class="empty-note">Loading verified suppliers…</p>
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="site panel" style="margin-top:1rem">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="brand">
+              <img class="logo-mark" src="/assets/logo-mark.png" width="36" height="40" alt="" aria-hidden="true" />
+              <span class="brand-name">Urban Procures</span>
+            </div>
+            <span class="muted" style="font-size:.8rem">Dubai, UAE</span>
+          </div>
+          <nav class="footer-col">
+            <strong>Platform</strong>
+            <button onclick="navigateTo('index')">Home</button>
+            <button onclick="navigateTo('how')">How it works</button>
+            <button onclick="navigateTo('public-rfq')">Get Quotes</button>
+            <button onclick="navigateTo('vendors')">Vendors</button>
+          </nav>
+          <nav class="footer-col">
+            <strong>Legal</strong>
+            <button onclick="navigateTo('terms-client')">Client terms</button>
+            <button onclick="navigateTo('terms-vendor')">Vendor terms</button>
+            <button onclick="navigateTo('privacy')">Privacy</button>
+          </nav>
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <script>
+    function navigateTo(page) {
+      var raw = !page || page === 'home' ? 'index' : String(page);
+      var parts = raw.split('#');
+      var name = parts[0].replace(/\.html$/i, '') || 'index';
+      window.location.href = window.urbanRoute(name) + (parts[1] ? '#' + parts[1] : '');
+    }
+    window.navigateTo = navigateTo;
+  </script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

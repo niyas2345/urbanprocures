@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Urban Procures | Construction RFQ & Vendor Sourcing Platform UAE</title>
+  <meta name="description" content="Post construction RFQs and compare quotations from Civil, MEP, HVAC, fit-out, manpower and specialist contractors across the UAE." />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://www.urbanprocures.com/" />
+  <meta name="theme-color" content="#174f5d" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/css/styles.css" />
+<link rel="stylesheet" href="/css/platform.css" /><script src="/js/routes.js"></script></head>
+<body data-page="index.html">
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar" aria-label="Primary">
+      <div class="brand">
+        <img class="logo-mark" src="/assets/logo-mark.png" width="36" height="40" alt="" aria-hidden="true" />
+        <span class="brand-name">Urban Procures</span>
+      </div>
+      <nav class="nav" id="nav">
+        <span class="lab">Platform</span>
+        <button class="active" data-page="home" onclick="navigateTo('index')">Home</button>
+        <button data-page="how" onclick="navigateTo('how')">How it works</button>
+        <button data-page="public-rfq" onclick="navigateTo('public-rfq')">Get Quotes</button>
+        <button data-page="vendors" onclick="navigateTo('vendors')">Vendors</button>
+        <span class="lab">Account</span>
+        <button data-page="client" onclick="navigateTo('client')">Client Portal</button>
+        <button data-page="signup" onclick="navigateTo('signup')">Sign Up</button>
+        <button data-page="signin" onclick="navigateTo('signin')">Sign In</button>
+      </nav>
+      <div class="side-foot">
+        <div class="rolebox">
+          <strong style="font-size:.78rem">Secure desk access</strong>
+          <p class="muted" style="margin:.25rem 0 .45rem;color:#dcebea;font-size:.72rem">Sign in to access your persistent client, vendor, or owner desk.</p>
+          <button class="ghost" type="button" style="width:100%" onclick="navigateTo('signin')">Sign in</button>
+        </div>
+        <article class="trust"><strong>Identity firewall</strong><span>Vendor names masked until award.</span></article>
+        <article class="trust accent"><strong>UAE coverage</strong><span>Civil to manpower. Register now — verification later.</span></article>
+      </div>
+    </aside>
+
+    <section class="workspace" id="workspace">
+      <div class="row" style="justify-content:flex-end;align-items:center">
+        <button class="ghost" type="button" onclick="navigateTo('signin')">Sign in</button>
+        <button class="menu" id="menuBtn" type="button" aria-label="Open navigation">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">UAE construction procurement</p>
+          <h1>Stop chasing quotes across email and WhatsApp</h1>
+          <p class="sub">Post the work for free, or join as a contractor and receive RFQs. No card. A fee is recorded only if a contractor is awarded the work.</p>
+        </div>
+        <div class="row">
+          <button class="btn" type="button" onclick="navigateTo('public-rfq')">Get Quotes — Free</button>
+          <a class="ghost" href="/signup#vendor">Join as a contractor — Free</a>
+        </div>
+      </header>
+
+      <!-- LIVE STATS BAR -->
+      <section class="stats-bar">
+        <div class="stat-card">
+          <span>Companies registered</span>
+          <strong id="regCount">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Projects awarded</span>
+          <strong id="awardCount">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Awarded volume</span>
+          <strong id="volumeCount">AED 0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Verified vendors</span>
+          <strong id="vendorCount">0</strong>
+        </div>
+      </section>
+
+      <!-- HERO SECTION -->
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Build for builders in the UAE</p>
+          <h2>One platform for every RFQ, quotation and award</h2>
+          <p>From the first project folder to the awarded package — and the audit trail that comes after it.</p>
+          <div class="pills" style="margin-top:.8rem">
+            <span>Free plan, no card required</span>
+            <span>Contractors join free</span>
+            <span>Clients post for free</span>
+          </div>
+        </div>
+        <div style="display:grid;gap:.6rem">
+          <div class="stat">
+            <p class="lab">Identity firewall</p>
+            <strong style="font-size:1.05rem">Names stay off the pack until award</strong>
+          </div>
+          <div class="stat">
+            <p class="lab">UAE desk</p>
+            <strong style="font-size:1.05rem">WhatsApp +971 50 733 5567</strong>
+          </div>
+          <div class="stat">
+            <p class="lab">Clients</p>
+            <strong style="font-size:1.05rem">No posting fee</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- MAIN CONTENT: 2-COLUMN LAYOUT -->
+      <div class="g2">
+        <!-- LEFT COLUMN -->
+        <div style="display:grid;gap:.9rem">
+          <!-- RECENTLY AWARDED FEED -->
+          <section class="panel">
+            <header>
+              <h3>Recently Awarded</h3>
+              <span class="chip">From the desk</span>
+            </header>
+            <div class="awarded-feed" id="awardedFeed">
+              <p class="empty-note">No awards yet. The first awarded work pack will appear here — without client or vendor names.</p>
+            </div>
+          </section>
+
+          <!-- TRUSTED BY -->
+          <section class="panel">
+            <header>
+              <h3>Verified suppliers</h3>
+              <span class="chip" id="trustedChip">0 verified</span>
+            </header>
+            <div class="trusted-grid" id="trustedGrid">
+              <p class="empty-note">Verified vendor companies appear here after licence checks. Contact details stay off this page.</p>
+            </div>
+          </section>
+
+          <!-- CATEGORY ACTIVITY HEATMAP -->
+          <section class="panel">
+            <header>
+              <h3>Category activity</h3>
+              <span class="chip">Live RFQs</span>
+            </header>
+            <div class="heatmap" id="categoryHeatmap">
+              <p class="empty-note">Category mix appears once RFQs are posted.</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div style="display:grid;gap:.9rem">
+          <!-- LIVE ACTIVITY TICKER -->
+          <section class="panel">
+            <header>
+              <h3>Desk activity</h3>
+              <span class="chip">Live counts</span>
+            </header>
+            <div class="ticker" id="activityTicker">
+              <p class="empty-note">Activity appears here as RFQs, quotes, and awards move through the desk. Company names stay off this feed.</p>
+            </div>
+          </section>
+
+          <!-- RFQ PULSE -->
+          <section class="panel">
+            <header>
+              <h3>RFQ Pulse</h3>
+            </header>
+            <div class="pulse-stats">
+              <div class="pulse-stat">
+                <strong id="pulseOpen">0</strong>
+                <span>Open RFQs</span>
+              </div>
+              <div class="pulse-stat">
+                <strong id="pulseClosing">0</strong>
+                <span>Closes this week</span>
+              </div>
+              <div class="pulse-stat">
+                <strong id="pulseQuotes">0</strong>
+                <span>Quotes in play</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- MARKET INSIGHTS -->
+          <section class="panel">
+            <header>
+              <h3>Desk snapshot</h3>
+            </header>
+            <div class="insights-grid">
+              <div class="insight-card">
+                <strong id="insightRfqs">0</strong>
+                <span>RFQs posted</span>
+              </div>
+              <div class="insight-card">
+                <strong id="insightAwards">0</strong>
+                <span>Awards</span>
+              </div>
+              <div class="insight-card">
+                <strong id="insightCategory">—</strong>
+                <span>Most active category</span>
+              </div>
+              <div class="insight-card">
+                <strong id="insightVendors">0</strong>
+                <span>Verified vendors</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- HOW IT WORKS PREVIEW -->
+          <section class="panel">
+            <header>
+              <h3>How it works</h3>
+              <button class="tiny" onclick="navigateTo('how')">View all</button>
+            </header>
+            <div class="how-preview">
+              <div class="how-step">
+                <div class="step-num">1</div>
+                <div>
+                  <strong>Get Quotes</strong>
+                  <p class="muted">Create project, attach docs, receive vendor quotes</p>
+                </div>
+              </div>
+              <div class="how-step">
+                <div class="step-num">2</div>
+                <div>
+                  <strong>Receive Quotes</strong>
+                  <p class="muted">Structured line-item quotations from verified vendors</p>
+                </div>
+              </div>
+              <div class="how-step">
+                <div class="step-num">3</div>
+                <div>
+                  <strong>Compare & Award</strong>
+                  <p class="muted">AI-assisted comparison, full audit trail</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="site panel">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="brand">
+              <img class="logo-mark" src="/assets/logo-mark.png" width="36" height="40" alt="" aria-hidden="true" />
+              <span class="brand-name">Urban Procures</span>
+            </div>
+            <span class="muted" style="font-size:.8rem">Dubai, UAE</span>
+            <span class="muted" style="font-size:.72rem">The digital RFQ marketplace for the UAE construction industry</span>
+          </div>
+          <nav class="footer-col" aria-label="Platform">
+            <strong>Platform</strong>
+            <button type="button" onclick="navigateTo('index')">Home</button>
+            <button type="button" onclick="navigateTo('how')">How it works</button>
+            <button type="button" onclick="navigateTo('public-rfq')">Get Quotes</button>
+            <button type="button" onclick="navigateTo('vendors')">Vendors</button>
+          </nav>
+          <nav class="footer-col" aria-label="Legal">
+            <strong>Legal</strong>
+            <button type="button" onclick="navigateTo('terms-client')">Client terms</button>
+            <button type="button" onclick="navigateTo('terms-vendor')">Vendor terms</button>
+            <button type="button" onclick="navigateTo('privacy')">Privacy</button>
+            <button type="button" onclick="navigateTo('cookies')">Cookies</button>
+          </nav>
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <!-- STICKY FOOTER -->
+  <div class="sticky" id="sticky">
+    <div class="brand">
+      <img class="logo-mark" src="/assets/logo-mark.png" width="36" height="40" alt="" aria-hidden="true" />
+      <span class="brand-name">Urban Procures</span>
+    </div>
+    <div class="row">
+      <button class="btn" type="button" onclick="navigateTo('public-rfq')">Get Quotes — Free</button>
+      <a class="ghost" href="https://wa.me/971507335567" target="_blank" rel="noreferrer" style="color:#fff;border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.1)">WhatsApp the desk</a>
+    </div>
+  </div>
+
+  <!-- COOKIE BANNER -->
+  <div class="cookie" id="cookie">
+    <strong>Cookies</strong>
+    <p class="muted" style="margin:.3rem 0 .6rem">Essential storage keeps your session on this device. Analytics stay off.</p>
+    <div class="row">
+      <button class="tiny solid" type="button">Essential only</button>
+      <button class="tiny" type="button">Preferences</button>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <dialog class="modal" id="modal">
+    <form method="dialog" class="modal-inner">
+      <header class="topbar">
+        <div><p class="eyebrow">Dialog</p><h2>Details</h2></div>
+        <button class="ghost" value="cancel" type="submit">Close</button>
+      </header>
+      <div id="modalBody"></div>
+      <div class="row" style="justify-content:flex-end">
+        <button class="ghost" value="cancel" type="submit">Cancel</button>
+        <button class="btn" value="default" type="submit">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    function navigateTo(page) {
+      var name = !page || page === 'home' ? 'index' : String(page).replace(/\.html$/i, '');
+      window.location.href = window.urbanRoute(name);
+    }
+    window.navigateTo = navigateTo;
+  </script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

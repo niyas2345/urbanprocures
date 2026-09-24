@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /client/dashboard
+Disallow: /client/projects
+Disallow: /client/rfqs
+Disallow: /client/quotations
+Disallow: /vendor/
+Disallow: /reset-password
+Sitemap: https://www.urbanprocures.com/sitemap.xml
