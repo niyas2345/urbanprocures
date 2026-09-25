@@ -27,8 +27,8 @@ function cleanCallbackUrl(url) {
 
 /**
  * Finish Supabase's password-recovery callback before the reset form is usable.
- * Supabase normally detects these callback formats on initialization; handling
- * them here as well avoids submitting updateUser before that session is ready.
+ * Automatic URL detection is disabled on this page so one-time codes are not
+ * consumed twice. Incoming callbacks take precedence over any old session.
  */
 export async function establishPasswordRecoverySession(auth, href) {
   const url = new URL(href)
@@ -38,17 +38,13 @@ export async function establishPasswordRecoverySession(auth, href) {
   let callbackPresent = false
 
   try {
-    const current = await auth.getSession()
-    session = current?.data?.session || null
-    error ||= current?.error || null
-
     if (!session && !error) {
       const tokenHash = url.searchParams.get('token_hash')
       if (tokenHash) {
         callbackPresent = true
         const verified = await auth.verifyOtp({
           token_hash: tokenHash,
-          type: url.searchParams.get('type') || 'recovery'
+          type: 'recovery'
         })
         session = verified?.data?.session || null
         error = verified?.error || null
@@ -78,6 +74,11 @@ export async function establishPasswordRecoverySession(auth, href) {
         error = exchanged?.error || null
       }
     }
+    if (!callbackPresent && !error && !hash.has('access_token') && !hash.has('refresh_token')) {
+      const current = await auth.getSession()
+      session = current?.data?.session || null
+      error = current?.error || null
+    }
   } catch (cause) {
     error = cause
   }
@@ -86,6 +87,7 @@ export async function establishPasswordRecoverySession(auth, href) {
     || url.searchParams.has('code')
     || url.searchParams.has('token_hash')
     || hash.has('access_token')
+    || hash.has('refresh_token')
     || url.searchParams.has('error')
     || hash.has('error')
 

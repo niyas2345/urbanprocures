@@ -60,3 +60,20 @@ test('reports an expired callback and removes its sensitive parameters', async (
   assert.match(result.error.message, /Link expired/)
   assert.equal(result.cleanUrl, 'https://urbanprocures.com/reset-password')
 })
+
+test('incoming recovery link selects its account even if another session exists', async () => {
+  const expected = { user: { id: 'recovery-account' } }
+  const auth = {
+    getSession: async () => { throw new Error('Old session must not override the incoming link') },
+    exchangeCodeForSession: async () => ({ data: { session: expected } })
+  }
+  const result = await establishPasswordRecoverySession(auth, 'https://urbanprocures.com/reset-password?code=fresh')
+  assert.equal(result.session, expected)
+})
+
+test('an expired recovery link cannot authorize a password change using an old session', async () => {
+  const auth = { getSession: async () => ({ data: { session: { user: { id: 'other-account' } } } }) }
+  const result = await establishPasswordRecoverySession(auth, 'https://urbanprocures.com/reset-password#error=access_denied&error_description=Expired')
+  assert.equal(result.session, null)
+  assert.ok(result.error)
+})

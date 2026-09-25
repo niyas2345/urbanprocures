@@ -12,7 +12,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
+    // Consume reset callbacks once, before enabling password submission.
+    detectSessionInUrl: !(typeof window !== 'undefined' && /^\/reset-password(?:\.html)?\/?$/.test(window.location.pathname))
   }
 })
 
