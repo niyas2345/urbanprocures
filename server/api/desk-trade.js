@@ -54,12 +54,12 @@ export async function awardQuotation(request, env, actor, rfqId) {
   const body = await readJson(request); const quotationId = clean(body.quotation_id || body.quote_id, 80);
   const rfq = await getRfq(env, rfqId); assertRfqOwner(rfq, actor);
   if (!['Comparing', 'Quoting'].includes(rfq.status)) throw new Error('RFQ must be open for comparison before award');
+  const quotation = await one(env, `/rest/v1/quotations?${params({ id: `eq.${quotationId}`, rfq_id: `eq.${rfqId}`, select: '*' })}`);
+  if (!quotation) throw notFound('Quotation not found');
   if (rfq.status === 'Quoting') {
     await patch(env, 'rfqs', `id=eq.${encodeURIComponent(rfqId)}`, { status: 'Comparing' });
     rfq.status = 'Comparing';
   }
-  const quotation = await one(env, `/rest/v1/quotations?${params({ id: `eq.${quotationId}`, rfq_id: `eq.${rfqId}`, select: '*' })}`);
-  if (!quotation) throw notFound('Quotation not found');
   const existing = await one(env, `/rest/v1/awards?${params({ rfq_id: `eq.${rfqId}`, select: '*' })}`);
   if (existing) return json({ ok: true, idempotent: true, award: existing });
   const legacyQuoteId = String(quotation.id);
@@ -137,7 +137,9 @@ export async function downloadPrivateDocument(env, actor, kind, id) {
   const path = document.storage_path || document.storage_key;
   const object = await getPrivateObject(env, bucket, path);
   await audit(env, actor, document.rfq_id, 'private_document_downloaded', { kind, document_id: id });
-  return new Response(object.body, { status: 200, headers: { 'Content-Type': document.mime_type || object.contentType || 'application/octet-stream', 'Content-Disposition': `attachment; filename="${safeDisposition(document.original_filename || 'document')}"`, 'Cache-Control': 'private, no-store' } });
+  const contentType = String(document.mime_type || object.contentType || 'application/octet-stream').split(';')[0].toLowerCase();
+  const inlineSafe = contentType === 'application/pdf' || /^image\/(png|jpeg|gif|webp)$/.test(contentType);
+  return new Response(object.body, { status: 200, headers: { 'Content-Type': contentType, 'Content-Disposition': `${inlineSafe ? 'inline' : 'attachment'}; filename="${safeDisposition(document.original_filename || 'document')}"`, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, no-store' } });
 }
 
 async function getPrivateObject(env, bucket, path) {
