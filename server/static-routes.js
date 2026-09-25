@@ -8,7 +8,7 @@ export const PAGE_ROUTES = Object.freeze({
   '/vendor/dashboard': '/dashboard-vendor.html', '/vendor/invitations': '/dashboard-vendor.html',
   '/vendor/quotations': '/dashboard-vendor.html', '/vendor/awards': '/dashboard-vendor.html',
   '/vendor/messages': '/dashboard-vendor.html', '/vendor/settings': '/dashboard-vendor.html',
-  '/admin/dashboard': '/dashboard-admin.html', '/admin/vendors': '/dashboard-admin.html',
+  '/admin/dashboard': '/dashboard-admin.html', '/admin/documents': '/dashboard-admin.html', '/admin/vendors': '/dashboard-admin.html',
   '/admin/users': '/dashboard-admin.html', '/admin/rfqs': '/dashboard-admin.html',
   '/admin/awards': '/dashboard-admin.html', '/admin/invoices': '/dashboard-admin.html',
   '/admin/stats': '/dashboard-admin.html', '/admin/settings': '/dashboard-admin.html',
