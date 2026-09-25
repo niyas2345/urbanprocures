@@ -122,6 +122,25 @@ test('client can download own original RFQ document from private R2 binding', as
   } finally { globalThis.fetch = previous; }
 });
 
+test('admin can inline-preview a private RFQ PDF', async () => {
+  const previous = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    if (url.includes('/rfq_documents?')) return json([{ id: 'pdf1', rfq_id: 'RFQ-1', original_filename: 'scope.pdf', mime_type: 'application/pdf', storage_bucket: 'rfq-documents', storage_path: 'c1/scope.pdf' }]);
+    if (url.includes('/procurement_audit_events')) return json([{}]);
+    throw new Error(`unexpected ${url}`);
+  };
+  try {
+    const response = await handleDeskApi(request('admin', 'a1', '/api/desk/documents/rfq/pdf1'), {
+      ...env,
+      URBAN_PROCURE_RFQ_DOCUMENTS: { async get(path) { assert.equal(path, 'c1/scope.pdf'); return new Response('%PDF test'); } },
+    });
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('Content-Disposition'), /^inline;/);
+    assert.equal(response.headers.get('X-Content-Type-Options'), 'nosniff');
+    assert.equal(await response.text(), '%PDF test');
+  } finally { globalThis.fetch = previous; }
+});
+
 test('client cannot award another client RFQ', async () => {
   const previous = globalThis.fetch;
   globalThis.fetch = async (url) => {
@@ -137,6 +156,21 @@ test('client cannot award another client RFQ', async () => {
 test('admin cannot award a quotation on behalf of a client', async () => {
   const response = await handleDeskApi(request('admin', 'a1', '/api/desk/rfqs/RFQ-1/award', { method: 'POST', body: { quotation_id: 'q1' } }), env);
   assert.equal(response.status, 403);
+});
+
+test('invalid quotation cannot move an RFQ into comparison', async () => {
+  const previous = globalThis.fetch; let patched = false;
+  globalThis.fetch = async (url, init = {}) => {
+    if (url.includes('/rfqs?') && (!init.method || init.method === 'GET')) return json([{ id: 'RFQ-1', client_id: 'c1', status: 'Quoting' }]);
+    if (url.includes('/quotations?')) return json([]);
+    if (url.includes('/rfqs?') && init.method === 'PATCH') patched = true;
+    throw new Error(`unexpected ${init.method || 'GET'} ${url}`);
+  };
+  try {
+    const response = await handleDeskApi(request('client', 'c1', '/api/desk/rfqs/RFQ-1/award', { method: 'POST', body: { quotation_id: 'missing' } }), env);
+    assert.equal(response.status, 404);
+    assert.equal(patched, false);
+  } finally { globalThis.fetch = previous; }
 });
 
 test('description-only RFQ with no documents becomes sanitizable from scope text', async () => {
