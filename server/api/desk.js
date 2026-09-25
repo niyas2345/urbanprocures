@@ -81,7 +81,7 @@ export async function handleDeskApi(request, env = {}) {
     }
     const awardMatch = url.pathname.match(/^\/api\/desk\/rfqs\/([^/]+)\/award$/);
     if (request.method === 'POST' && awardMatch) {
-      return ['client', 'admin'].includes(actor.role) ? await awardQuotation(request, env, actor, decodeURIComponent(awardMatch[1])) : denied();
+      return actor.role === 'client' ? await awardQuotation(request, env, actor, decodeURIComponent(awardMatch[1])) : denied();
     }
     const verifyMatch = url.pathname.match(/^\/api\/desk\/vendors\/([^/]+)\/status$/);
     if (request.method === 'POST' && verifyMatch) {
