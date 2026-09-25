@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { establishPasswordRecoverySession } from './password-recovery.js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vdlrwekoyvvspxuyzgrx.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkbHJ3ZWtveXZ2c3B4dXl6Z3J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MTIwODcsImV4cCI6MjEwMzA4ODA4N30.xwgrrIesqLpR7GOULjV2g4MKQw2OVxYVmfsE2D0mMM4'
@@ -105,6 +106,14 @@ export async function resetPassword(email) {
 
 export async function updatePassword(password) {
   return supabase.auth.updateUser({ password })
+}
+
+export async function completePasswordRecovery() {
+  const result = await establishPasswordRecoverySession(supabase.auth, window.location.href)
+  if (result.cleanUrl && result.cleanUrl !== window.location.href) {
+    window.history.replaceState(window.history.state, '', result.cleanUrl)
+  }
+  return result
 }
 
 export const getUser = async () => {

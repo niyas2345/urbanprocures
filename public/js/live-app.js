@@ -10,6 +10,7 @@ import {
   isAdminEmail,
   resetPassword,
   updatePassword,
+  completePasswordRecovery,
   apiRequest,
   friendlyAuthError,
   accessToken
@@ -492,6 +493,7 @@ async function loadDeskSafe() {
 async function wirePublicChrome() {
   const name = fileName()
   if (/^dashboard-/i.test(name)) return
+  if (name === 'reset-password.html') return
   const desk = await getDesk()
   if (!desk.user || !desk.role) return
   if (name === 'signin.html' || name === 'signup.html' || name === 'reset-password.html') {
@@ -582,12 +584,32 @@ async function wireResetPassword() {
   const form = document.getElementById('resetPasswordForm')
   if (!form) return
   const msg = document.getElementById('resetMsg')
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-    if (event === 'PASSWORD_RECOVERY') setMsg(msg, 'Enter a new password for this account.', 'ok')
+  const btn = form.querySelector('button[type="submit"]')
+  let recoverySession = false
+  if (btn) btn.disabled = true
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY' && session) {
+      recoverySession = true
+      if (btn) btn.disabled = false
+      setMsg(msg, 'Enter a new password for this account.', 'ok')
+    }
   })
-  await supabase.auth.getSession()
+  const recovery = await completePasswordRecovery()
+  recoverySession = Boolean(recovery.session)
+  if (btn) btn.disabled = !recoverySession
+  if (recoverySession) {
+    setMsg(msg, 'Enter a new password for this account.', 'ok')
+  } else if (recovery.error) {
+    setMsg(msg, 'This reset link is invalid or expired. Request a new password reset email and open its latest link.', 'error')
+  } else {
+    setMsg(msg, 'Open the password reset link from your email to continue. If it has expired, request a new one.', 'error')
+  }
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
+    if (!recoverySession) {
+      setMsg(msg, 'Open a valid password reset link from your email before updating the password.', 'error')
+      return
+    }
     const password = document.getElementById('newPassword').value
     const confirm = document.getElementById('confirmNewPassword').value
     if (password.length < 8) {
@@ -598,7 +620,6 @@ async function wireResetPassword() {
       setMsg(msg, 'Passwords do not match.', 'error')
       return
     }
-    const btn = form.querySelector('button[type="submit"]')
     if (btn) btn.disabled = true
     const { error } = await updatePassword(password)
     if (error) {
