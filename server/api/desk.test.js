@@ -134,6 +134,11 @@ test('client cannot award another client RFQ', async () => {
   } finally { globalThis.fetch = previous; }
 });
 
+test('admin cannot award a quotation on behalf of a client', async () => {
+  const response = await handleDeskApi(request('admin', 'a1', '/api/desk/rfqs/RFQ-1/award', { method: 'POST', body: { quotation_id: 'q1' } }), env);
+  assert.equal(response.status, 403);
+});
+
 test('description-only RFQ with no documents becomes sanitizable from scope text', async () => {
   const previous = globalThis.fetch; let patchedReady = null;
   globalThis.fetch = async (url, init = {}) => {
