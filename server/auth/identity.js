@@ -3,6 +3,17 @@ import { supabaseSecret } from "../supabase-env.js";
 
 export const ADMIN_EMAIL = 'urbanprocures@gmail.com';
 
+function testAuthAllowed(request, env) {
+  if (env.PROCUREMENT_TEST_AUTH !== '1') return false;
+  if (env.ALLOW_TEST_AUTH === '1') return true;
+  try {
+    const host = new URL(request.url).hostname;
+    return /^(?:localhost|127\.0\.0\.1)$/i.test(host) || host.endsWith('.test') || host.endsWith('.local');
+  } catch {
+    return false;
+  }
+}
+
 export function resolvedRole(user) {
   return user?.app_metadata?.role;
 }
@@ -50,7 +61,7 @@ export async function readSessionUser(request, env) {
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   if (!token) return { ok: false, status: 401, error: 'Authentication required' };
 
-  if (env.PROCUREMENT_TEST_AUTH === '1' && token.startsWith('test:')) {
+  if (token.startsWith('test:') && testAuthAllowed(request, env)) {
     const [, role, userId] = token.split(':');
     if (!role || !userId) return { ok: false, status: 401, error: 'Invalid test token' };
     const email = role === 'admin' ? ADMIN_EMAIL : `${role}@test.invalid`;
