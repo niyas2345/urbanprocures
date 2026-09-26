@@ -1,7 +1,7 @@
 /** Canonical public routes. Keep these independent of the Pages asset lookup. */
 export const PAGE_ROUTES = Object.freeze({
   '/': '/index.html', '/signup': '/signup.html', '/signin': '/signin.html',
-  '/reset-password': '/reset-password.html',
+  '/reset-password': '/reset-password.html', '/verify-email': '/verify-email.html',
   '/client/dashboard': '/dashboard-client.html', '/client/projects': '/dashboard-client.html',
   '/client/rfqs': '/dashboard-client.html', '/client/quotations': '/dashboard-client.html',
   '/client/messages': '/dashboard-client.html', '/client/settings': '/dashboard-client.html',
@@ -20,7 +20,7 @@ export const PAGE_ROUTES = Object.freeze({
 
 const LEGACY = Object.freeze({
   '/index.html': '/', '/signup.html': '/signup', '/signin.html': '/signin',
-  '/reset-password.html': '/reset-password', '/dashboard-client.html': '/client/dashboard',
+  '/reset-password.html': '/reset-password', '/verify-email.html': '/verify-email', '/dashboard-client.html': '/client/dashboard',
   '/dashboard-vendor.html': '/vendor/dashboard', '/dashboard-admin.html': '/admin/dashboard',
   '/public-rfq.html': '/rfq/new', '/how.html': '/how', '/vendors.html': '/vendors',
   '/client.html': '/client', '/about.html': '/about', '/contact.html': '/contact',

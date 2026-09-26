@@ -2,6 +2,7 @@
 /signup.html /signup 308
 /signin.html /signin 308
 /reset-password.html /reset-password 308
+/verify-email.html /verify-email 308
 /dashboard-client.html /client/dashboard 308
 /dashboard-vendor.html /vendor/dashboard 308
 /dashboard-admin.html /admin/dashboard 308
