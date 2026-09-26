@@ -131,7 +131,7 @@ async function handle(request,env) {
     const rid=id(),reference='UP-'+crypto.randomUUID().slice(0,8).toUpperCase();
     const visit=body.site_visit===true;
     const statements=[db.prepare('INSERT INTO public_requests(id,reference,name,phone,email,location,category,title,scope,visit_requested) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(rid,reference,name,phone,addressEmail,address,category,title,scope,visit?1:0)];
-    if(visit)statements.push(db.prepare('INSERT INTO site_visits(id,request_id,payment_status) VALUES(?,?,?)').bind(id(),rid,'unpaid'));
+    if(visit)statements.push(db.prepare('INSERT INTO site_visits(id,request_id,payment_status,appointment_at) VALUES(?,?,?,?)').bind(id(),rid,'unpaid',clean(body.preferred_appointment,40)||null));
     await db.batch(statements);await audit(db,null,'public_request',rid,'created',{siteVisit:visit});
     return json({ok:true,reference,site_visit:visit?{amount_aed:100,payment_status:'unpaid',status:'requested'}:null},201);
   }
