@@ -23,7 +23,7 @@ export function calculateManpowerServiceCharge(labourers, hoursPerLabourer) {
     labourers: count,
     hoursPerLabourer: hours,
     calculationBasis: 'manpower_labourer_hours',
-    paymentTrigger: 'as_specified_in_vendor_terms'
+    paymentTrigger: 'manpower_pdc_before_award_execution'
   };
 }
 
@@ -49,7 +49,7 @@ export function calculateServiceFee(orderValue, rules = DEFAULT_SERVICE_FEE) {
     serviceFee: Number(fee.toFixed(2)),
     vatApplicable: true,
     calculationBasis: 'total_lpo_work_order_value',
-    paymentTrigger: 'first_payment_stage',
+    paymentTrigger: 'upon_award_due_within_7_working_days',
   };
 }
 
