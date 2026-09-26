@@ -13,7 +13,7 @@ test('calculates 2.5 percent when above minimum', () => {
 test('fee basis is total LPO/work order value', () => {
   const result = calculateServiceFee(400000);
   assert.equal(result.calculationBasis, 'total_lpo_work_order_value');
-  assert.equal(result.paymentTrigger, 'first_payment_stage');
+  assert.equal(result.paymentTrigger, 'upon_award_due_within_7_working_days');
 });
 
 test('accepts LPO/work order trigger records', () => {
@@ -24,6 +24,7 @@ test('manpower uses AED 1 for each labourer-hour without the general-project min
   const result = calculateVendorServiceCharge({ category: 'Manpower Supply', awardedValue: 50000, labourers: 3, hoursPerLabourer: 120 });
   assert.equal(result.serviceFee, 360);
   assert.equal(result.calculationBasis, 'manpower_labourer_hours');
+  assert.equal(result.paymentTrigger, 'manpower_pdc_before_award_execution');
   assert.throws(() => calculateVendorServiceCharge({ category: 'manpower', awardedValue: 50000, labourers: 0, hoursPerLabourer: 120 }));
 });
 
