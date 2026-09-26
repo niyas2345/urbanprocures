@@ -73,7 +73,7 @@ export async function serveStatic(pathname, request, env = {}, assets = {}) {
     ['/robots.txt', '/sitemap.xml', '/build-stamp.json', '/.well-known/webmcp.json'].includes(path) ? path : null);
   if (!assetPath) return missing(path, assets);
   const asset = assets[assetPath];
-  const cache = assetPath.endsWith('.html') ? 'no-store' : 'public, max-age=3600';
+  const cache = assetPath === '/build-stamp.json' || assetPath.endsWith('.html') ? 'no-store' : 'public, max-age=3600';
   if (asset) return embedded(asset, cache);
   if (env.ASSETS?.fetch) {
     const response = await env.ASSETS.fetch(new Request(new URL(assetPath + url.search, url.origin), request));
