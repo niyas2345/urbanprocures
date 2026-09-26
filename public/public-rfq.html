@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/png" href="/assets/favicon.png" />
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <link rel="stylesheet" href="/css/styles.css" />
 <link rel="stylesheet" href="/css/platform.css" /><script src="/js/routes.js"></script></head>
 <body data-page="/rfq/new">
@@ -175,6 +176,7 @@
                 </div>
 
                 <div id="siteVisitDetails" style="display:none;padding:1rem;border:1px solid var(--orange);border-radius:10px;background:#fff">
+                  <label class="form-group" for="preferredAppointment">Preferred appointment date and time (optional)<input type="datetime-local" id="preferredAppointment" name="preferredAppointment"></label>
                   <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
                     <span style="font-size:1.5rem">📋</span>
                     <div>
@@ -194,6 +196,7 @@
               </div>
             </div>
 
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAAFD42QgkC2tOQXoA" data-theme="light"></div>
             <!-- Documents (Optional for public) -->
             <div class="form-section">
               <h3>Documents (Optional)</h3>
