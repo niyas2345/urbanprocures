@@ -848,11 +848,11 @@ async function wirePublicRfq() {
         panel.innerHTML = `
           <div style="display:grid;gap:1rem">
             <p class="eyebrow">${siteVisit ? 'Site visit requested' : 'RFQ submitted'}</p>
-            <h3>${siteVisit ? 'We will inspect first — AED 100' : 'Your request is in'}</h3>
+            <h3>${siteVisit ? 'Site visit request received — AED 100 pending' : 'Your request is in'}</h3>
             <p>Tracking code: <strong>${esc(tracking)}</strong></p>
             <p class="muted" style="font-size:.9rem">${
               siteVisit
-                ? 'Your RFQ stays with our desk until the AED 100 site visit and BOQ are done. Name, phone, and property address are not shown to vendors.'
+                ? 'The AED 100 charge is not paid yet. Our team will arrange a legitimate payment method and appointment. Your RFQ stays with our desk until inspection and approval. Your contact details are not shown to vendors.'
                 : 'Your name, phone, and property address stay with Urban Procures. Vendors see the work pack only — never the address — until you award.'
             }</p>
             <div class="row">
