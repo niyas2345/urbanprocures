@@ -33,6 +33,9 @@ async function email(env,to,kind,subject,body) {
   await env.URBAN_PROCURE_DB.prepare('INSERT INTO email_log(id,recipient,kind,status,provider_id,error_code) VALUES(?,?,?,?,?,?)').bind(event,to,kind,result.success?'sent':'pending_provider',result.messageId||null,result.success?null:clean(result.reason,100)).run();
   return result;
 }
+function directMailConfigured(env) {
+  return Boolean(env.ZOHO_CLIENT_ID&&env.ZOHO_CLIENT_SECRET&&env.ZOHO_REFRESH_TOKEN&&env.ZOHO_ACCOUNT_ID);
+}
 async function issueSession(db,user) {
   const token=random();const expires=new Date(Date.now()+7*86400000).toISOString();
   await db.prepare('INSERT INTO sessions(id,user_id,token_hash,expires_at) VALUES(?,?,?,?)').bind(id(),user.id,await sha(token),expires).run();
@@ -52,6 +55,11 @@ async function verifyTurnstile(token,request,env) {
 async function handle(request,env) {
   const db=env.URBAN_PROCURE_DB;if(!db)return bad('Database unavailable',503);
   const path=new URL(request.url).pathname,method=request.method;
+  // Browser cookie sessions must not authorize cross-origin state changes.
+  if(!['GET','HEAD','OPTIONS'].includes(method)&&request.headers.has('Cookie')) {
+    const origin=request.headers.get('Origin');
+    if(origin&&origin!==new URL(request.url).origin)return bad('Cross-origin request denied',403);
+  }
   const user=await actor(request,env);
   if(path==='/api/native/documents'&&method==='POST') {
     const error=requireRole(user,['client','vendor','admin']);if(error)return error;
@@ -76,9 +84,10 @@ async function handle(request,env) {
     const object=await bucket?.get(doc.storage_key);if(!object)return bad('Not found',404);
     return new Response(object.body,{headers:{'Content-Type':doc.mime_type,'Content-Disposition':'attachment; filename="document"','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
   }
-  if(path==='/api/native/health'&&method==='GET')return json({ok:true,database:true,emailConfigured:!!(env.ZOHO_CLIENT_ID&&env.ZOHO_CLIENT_SECRET&&env.ZOHO_REFRESH_TOKEN&&env.ZOHO_ACCOUNT_ID),turnstileConfigured:!!env.TURNSTILE_SECRET});
+  if(path==='/api/native/health'&&method==='GET')return json({ok:true,database:true,emailConfigured:directMailConfigured(env),turnstileConfigured:!!env.TURNSTILE_SECRET});
   const body=method==='POST'||method==='PATCH'?await request.json().catch(()=>({})):{};
   if(path==='/api/native/auth/register'&&method==='POST') {
+    if(!directMailConfigured(env))return bad('Registration is unavailable until email verification is connected',503);
     const address=clean(body.email,200).toLowerCase(),role=clean(body.role,20);
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)||!['client','vendor'].includes(role)||String(body.password||'').length<12)return bad('Valid email, role and password of at least 12 characters required');
     if(role==='vendor' && body.accept_vendor_terms!==true)return bad('Vendor Terms acceptance is required');
@@ -109,6 +118,7 @@ async function handle(request,env) {
     const out=json({ok:true});out.headers.set('Set-Cookie','up_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');return out;
   }
   if(path==='/api/native/auth/reset/request'&&method==='POST') {
+    if(!directMailConfigured(env))return bad('Password reset is unavailable until email delivery is connected',503);
     const address=clean(body.email,200).toLowerCase();const found=await db.prepare('SELECT id FROM users WHERE email=?').bind(address).first();
     if(found){const token=random();await db.prepare('INSERT INTO auth_tokens(id,user_id,token_hash,purpose,expires_at) VALUES(?,?,?,?,?)').bind(id(),found.id,await sha(token),'reset',new Date(Date.now()+3600000).toISOString()).run();await email(env,address,'password_reset','Reset your Urban Procures password',`${new URL(request.url).origin}/reset-password?token=${encodeURIComponent(token)}`)}
     return json({ok:true});
