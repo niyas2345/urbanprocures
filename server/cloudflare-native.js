@@ -53,6 +53,29 @@ async function handle(request,env) {
   const db=env.URBAN_PROCURE_DB;if(!db)return bad('Database unavailable',503);
   const path=new URL(request.url).pathname,method=request.method;
   const user=await actor(request,env);
+  if(path==='/api/native/documents'&&method==='POST') {
+    const error=requireRole(user,['client','vendor','admin']);if(error)return error;
+    const form=await request.formData();const file=form.get('file'),kind=clean(form.get('kind'),30),ownerId=clean(form.get('owner_id'),100);
+    if(!(file instanceof File)||file.size<1||file.size>10_000_000||!['application/pdf','image/jpeg','image/png'].includes(file.type))return bad('PDF, JPEG or PNG under 10 MB required');
+    if(!['rfq','quotation','site_visit'].includes(kind))return bad('Invalid document type');
+    const owner=kind==='rfq'?await db.prepare('SELECT c.owner_user_id FROM rfqs r JOIN companies c ON c.id=r.client_company_id WHERE r.id=?').bind(ownerId).first():kind==='quotation'?await db.prepare('SELECT c.owner_user_id FROM quotations q JOIN companies c ON c.id=q.vendor_company_id WHERE q.id=?').bind(ownerId).first():null;
+    if(user.role!=='admin'&&owner?.owner_user_id!==user.id)return bad('Document owner required',403);
+    const bucket=kind==='quotation'?env.URBAN_PROCURE_QUOTE_DOCUMENTS:env.URBAN_PROCURE_RFQ_DOCUMENTS;
+    if(!bucket)return bad('Private storage unavailable',503);
+    const docId=id(),key=`private/${kind}/${ownerId}/${docId}`;
+    await bucket.put(key,file.stream(),{httpMetadata:{contentType:file.type}});
+    await db.prepare('INSERT INTO documents(id,owner_kind,owner_id,uploaded_by,storage_key,original_name,mime_type,size_bytes) VALUES(?,?,?,?,?,?,?,?)').bind(docId,kind,ownerId,user.id,key,clean(file.name,180),file.type,file.size).run();
+    await audit(db,user,'document',docId,'uploaded',{kind});return json({ok:true,id:docId,review_status:'pending'},201);
+  }
+  const documentMatch=path.match(/^\/api\/native\/documents\/([^/]+)$/);
+  if(documentMatch&&method==='GET') {
+    const error=requireRole(user,['client','vendor','admin']);if(error)return error;
+    const doc=await db.prepare('SELECT * FROM documents WHERE id=?').bind(documentMatch[1]).first();if(!doc)return bad('Not found',404);
+    if(user.role!=='admin'&&doc.uploaded_by!==user.id)return bad('Access denied',403);
+    const bucket=doc.owner_kind==='quotation'?env.URBAN_PROCURE_QUOTE_DOCUMENTS:env.URBAN_PROCURE_RFQ_DOCUMENTS;
+    const object=await bucket?.get(doc.storage_key);if(!object)return bad('Not found',404);
+    return new Response(object.body,{headers:{'Content-Type':doc.mime_type,'Content-Disposition':'attachment; filename="document"','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
+  }
   if(path==='/api/native/health'&&method==='GET')return json({ok:true,database:true,emailConfigured:!!(env.ZOHO_CLIENT_ID&&env.ZOHO_CLIENT_SECRET&&env.ZOHO_REFRESH_TOKEN&&env.ZOHO_ACCOUNT_ID),turnstileConfigured:!!env.TURNSTILE_SECRET});
   const body=method==='POST'||method==='PATCH'?await request.json().catch(()=>({})):{};
   if(path==='/api/native/auth/register'&&method==='POST') {
@@ -85,9 +108,24 @@ async function handle(request,env) {
     const token=request.headers.get('Cookie')?.match(/up_session=([^;]+)/)?.[1];if(token)await db.prepare('DELETE FROM sessions WHERE token_hash=?').bind(await sha(token)).run();
     const out=json({ok:true});out.headers.set('Set-Cookie','up_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');return out;
   }
+  if(path==='/api/native/auth/reset/request'&&method==='POST') {
+    const address=clean(body.email,200).toLowerCase();const found=await db.prepare('SELECT id FROM users WHERE email=?').bind(address).first();
+    if(found){const token=random();await db.prepare('INSERT INTO auth_tokens(id,user_id,token_hash,purpose,expires_at) VALUES(?,?,?,?,?)').bind(id(),found.id,await sha(token),'reset',new Date(Date.now()+3600000).toISOString()).run();await email(env,address,'password_reset','Reset your Urban Procures password',`${new URL(request.url).origin}/reset-password?token=${encodeURIComponent(token)}`)}
+    return json({ok:true});
+  }
+  if(path==='/api/native/auth/reset/confirm'&&method==='POST') {
+    const token=await db.prepare("SELECT * FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?").bind(await sha(clean(body.token,200)),now()).first();
+    if(!token||String(body.password||'').length<12)return bad('Invalid reset token or password');
+    const salt=random();await db.batch([db.prepare('UPDATE users SET password_hash=?,password_salt=? WHERE id=?').bind(await passwordHash(body.password,salt),salt,token.user_id),db.prepare('UPDATE auth_tokens SET consumed_at=? WHERE id=?').bind(now(),token.id),db.prepare('DELETE FROM sessions WHERE user_id=?').bind(token.user_id)]);
+    await audit(db,{id:token.user_id},'user',token.user_id,'password_reset');return json({ok:true});
+  }
   if(path==='/api/native/auth/me'&&method==='GET')return user?json({ok:true,user}):bad('Authentication required',401);
   if(path==='/api/native/public/requests'&&method==='POST') {
     if(!await verifyTurnstile(body.turnstile_token,request,env))return bad('Verification required',403);
+    const clientHash=await sha((request.headers.get('CF-Connecting-IP')||'unknown')+':'+(env.RATE_LIMIT_SALT||'urbanprocures'));
+    const hour=now().slice(0,13);await db.prepare('INSERT OR IGNORE INTO public_rate_limits(client_hash,hour,attempts) VALUES(?,?,0)').bind(clientHash,hour).run();
+    const attempt=await db.prepare('UPDATE public_rate_limits SET attempts=attempts+1 WHERE client_hash=? AND hour=? AND attempts<5').bind(clientHash,hour).run();
+    if(!attempt.meta.changes)return bad('Please try again later',429);
     const name=clean(body.name,160),phone=clean(body.phone,60),address=clean(body.location,500),title=clean(body.title,220),scope=clean(body.scope,20000),category=clean(body.category,120),addressEmail=clean(body.email,200);
     if(!name||!phone||!address||!title||!scope||!category||!addressEmail)return bad('Complete all required request details');
     const rid=id(),reference='UP-'+crypto.randomUUID().slice(0,8).toUpperCase();
@@ -110,6 +148,44 @@ async function handle(request,env) {
   if(path==='/api/native/admin/site-visits'&&method==='GET') {
     const error=requireRole(user,['admin']);if(error)return error;
     const visits=await db.prepare('SELECT v.*,p.reference,p.name,p.phone,p.email,p.location,p.title,p.scope FROM site_visits v JOIN public_requests p ON p.id=v.request_id ORDER BY v.updated_at DESC LIMIT 100').all();return json({ok:true,visits:visits.results});
+  }
+  const verifyCompany=path.match(/^\/api\/native\/admin\/companies\/([^/]+)\/verify$/);
+  if(verifyCompany&&method==='POST') {
+    const error=requireRole(user,['admin']);if(error)return error;
+    const next=body.status==='verified'?'verified':body.status==='rejected'?'rejected':null;if(!next)return bad('Invalid verification decision');
+    await db.prepare('UPDATE companies SET verification_status=?,verified_at=? WHERE id=?').bind(next,next==='verified'?now():null,verifyCompany[1]).run();
+    await audit(db,user,'company',verifyCompany[1],'verification',{status:next});return json({ok:true});
+  }
+  if(path==='/api/native/admin/overview'&&method==='GET') {
+    const error=requireRole(user,['admin']);if(error)return error;
+    const counts=await db.prepare("SELECT (SELECT count(*) FROM users) users,(SELECT count(*) FROM companies WHERE verification_status='pending') companies_pending,(SELECT count(*) FROM public_requests WHERE status='under_review') requests_pending,(SELECT count(*) FROM site_visits WHERE status!='completed') visits_open,(SELECT count(*) FROM rfqs WHERE status='quoting') rfqs_open,(SELECT count(*) FROM service_charges WHERE status='due') service_charges_due").first();
+    return json({ok:true,counts});
+  }
+  if(path==='/api/native/admin/prospects'&&method==='POST') {
+    const error=requireRole(user,['admin']);if(error)return error;
+    const name=clean(body.name,180),address=clean(body.email,200).toLowerCase(),type=clean(body.type,20),source=clean(body.source_url,1000);
+    if(!name||!['client','vendor'].includes(type)||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)||!/^https:\/\//.test(source))return bad('A sourced business contact is required');
+    const prospectId=id();await db.prepare('INSERT OR IGNORE INTO prospects(id,name,domain,email,type,source_url,relevance) VALUES(?,?,?,?,?,?,?)').bind(prospectId,name,clean(body.domain,200),address,type,source,clean(body.relevance,1000)).run();
+    await audit(db,user,'prospect',prospectId,'added',{type});return json({ok:true},201);
+  }
+  const optout=path.match(/^\/api\/native\/admin\/prospects\/([^/]+)\/opt-out$/);
+  if(optout&&method==='POST') {const error=requireRole(user,['admin']);if(error)return error;await db.prepare("UPDATE prospects SET opted_out=1,status='opted_out' WHERE id=?").bind(optout[1]).run();await audit(db,user,'prospect',optout[1],'opted_out');return json({ok:true})}
+  if(path==='/api/native/admin/outreach/send-one'&&method==='POST') {
+    const error=requireRole(user,['admin']);if(error)return error;
+    const limit=Number(env.ZOHO_VERIFIED_DAILY_LIMIT||0);if(!Number.isSafeInteger(limit)||limit<1)return bad('Verified Zoho daily allowance is not configured',503);
+    const sent=await db.prepare("SELECT count(*) AS count FROM email_log WHERE kind='invitation' AND status='sent' AND created_at>=date('now')").first();if(sent.count>=limit)return bad('Daily sending limit reached',429);
+    const prospect=await db.prepare("SELECT * FROM prospects WHERE id=? AND opted_out=0 AND status='review'").bind(body.prospect_id).first();if(!prospect)return bad('Eligible prospect not found',404);
+    const already=await db.prepare('SELECT id FROM companies WHERE lower(contact_email)=?').bind(prospect.email).first();if(already)return bad('Company already registered',409);
+    const message=clean(body.message,3000),subject=clean(body.subject,180);if(!message||!subject)return bad('Invitation subject and message required');
+    if(!env.ZOHO_CLIENT_ID||!env.ZOHO_CLIENT_SECRET||!env.ZOHO_REFRESH_TOKEN||!env.ZOHO_ACCOUNT_ID)return bad('Zoho delivery is not configured',503);
+    const day=now().slice(0,10);
+    await db.prepare('INSERT OR IGNORE INTO email_quota(day,reserved) VALUES(?,0)').bind(day).run();
+    const reservation=await db.prepare('UPDATE email_quota SET reserved=reserved+1 WHERE day=? AND reserved<?').bind(day,limit).run();
+    if(!reservation.meta.changes)return bad('Daily sending limit reached',429);
+    let result;
+    try{result=await email(env,prospect.email,'invitation',subject,message)}catch{result={success:false}}
+    if(!result.success){await db.prepare('UPDATE email_quota SET reserved=reserved-1 WHERE day=? AND reserved>0').bind(day).run();return bad('Delivery was not confirmed',503)}
+    await db.prepare("UPDATE prospects SET status='invited' WHERE id=?").bind(prospect.id).run();await audit(db,user,'prospect',prospect.id,'invited');return json({ok:true});
   }
   if(path==='/api/native/rfqs'&&method==='POST') {
     const error=requireRole(user,['client','admin']);if(error)return error;
