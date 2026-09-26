@@ -836,12 +836,18 @@ async function wirePublicRfq() {
       deadline: document.getElementById('deadline').value ? document.getElementById('deadline').value.slice(0, 10) : null,
       budget_min: document.getElementById('budgetMin')?.value || null,
       budget_max: document.getElementById('budgetMax')?.value || null,
-      site_visit: siteVisit
+      site_visit: siteVisit,
+      preferred_appointment: document.getElementById('preferredAppointment')?.value || null,
+      turnstile_token: form.querySelector('input[name="cf-turnstile-response"]')?.value || ''
     }
     try {
-      const result = await apiRequest('/api/public/rfq', { method: 'POST', body, auth: true })
+      const result = await apiRequest('/api/native/public/requests', { method: 'POST', body: {
+        name: body.full_name, phone: body.phone, email: body.email, location: body.address,
+        title: body.title, category: body.category, scope: body.scope, site_visit: body.site_visit,
+        preferred_appointment: body.preferred_appointment, turnstile_token: body.turnstile_token
+      }, auth: false })
       localStorage.removeItem('up_public_rfq_draft')
-      const tracking = result.tracking_code || code
+      const tracking = result.reference || code
       const wa = waLink('Get Quotes ' + tracking + ' — ' + title + (siteVisit ? ' (site visit AED 100)' : ''))
       const panel = form.closest('.panel') || form.parentElement
       if (panel) {
