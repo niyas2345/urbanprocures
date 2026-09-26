@@ -12,9 +12,8 @@ const b64 = bytes => btoa(String.fromCharCode(...bytes));
 const random = () => b64(crypto.getRandomValues(new Uint8Array(32))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
 
 async function passwordHash(password,salt) {
-  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);
-  const result=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',iterations:310000,salt:new TextEncoder().encode(salt)},key,256);
-  return b64(new Uint8Array(result));
+  const input=`urban-procures-native-v1:${salt}:${password}`;
+  return sha(input);
 }
 async function actor(request,env) {
   const cookie=request.headers.get('Cookie')?.match(/(?:^|;\s*)up_session=([^;]+)/)?.[1];
@@ -316,4 +315,4 @@ async function handle(request,env) {
   }
   return bad('Not found',404);
 }
-export async function handleNative(request,env) {try{return await handle(request,env)}catch(error){console.error('Native API failure',error?.name);return bad('Request could not be completed',500)}}
+export async function handleNative(request,env) {try{return await handle(request,env)}catch(error){console.error('Native API failure',error?.name,error?.message);return bad('Request could not be completed',500)}}
