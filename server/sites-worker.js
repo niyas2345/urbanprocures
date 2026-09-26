@@ -7,6 +7,7 @@ import { ZohoEmailProvider } from "./ai/outreach-provider.js";
 import { handleInboundWebhook, handleWebhookHealth } from "./api/webhooks.js";
 import { requireIdentity, ADMIN_EMAIL, provisionedSignupRole, readSessionUser, inferredRole, writeAppMetadataRole, isRegisteredAdmin } from "./auth/identity.js";
 import { supabaseSecret, supabaseReady } from "./supabase-env.js";
+import { handleNative } from "./cloudflare-native.js";
 
 const STATIC_ASSETS = {};
 const DOC_TYPES = new Set(["vendor_tnc", "client_tnc", "annex_a"]);
@@ -14,6 +15,7 @@ const DOC_TYPES = new Set(["vendor_tnc", "client_tnc", "annex_a"]);
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/native/')) return handleNative(request, env);
     if (url.pathname === "/.well-known/webmcp.json") return handleWebMcp(request, env);
     if (url.pathname.startsWith("/api/")) return handleApi(request, env, url);
     return serveStatic(url.pathname, request, env);
