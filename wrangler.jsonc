@@ -21,10 +21,6 @@
     }
   ],
   "vars": {
-    "CAPACITY_RFQ_WARNING": "100",
-    "CAPACITY_RFQ_HARD_LIMIT": "250",
-    "CAPACITY_STORAGE_WARNING_GB": "8",
-    "CAPACITY_STORAGE_HARD_LIMIT_GB": "10",
     "PLATFORM_BILLING_MODE": "free",
     "SUPABASE_URL": "https://vdlrwekoyvvspxuyzgrx.supabase.co",
     "SUPABASE_ANON_KEY": "sb_publishable_0a8D88dOZPmHe_PHLCnBcg_2h6P7U6u"
