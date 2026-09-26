@@ -9,6 +9,30 @@ export const DEFAULT_SERVICE_FEE = Object.freeze({
   currency: 'AED',
 });
 
+/** Vendor Terms, section 7: manpower supply is charged per labourer-hour. */
+export function calculateManpowerServiceCharge(labourers, hoursPerLabourer) {
+  const count = Number(labourers);
+  const hours = Number(hoursPerLabourer);
+  if (!Number.isSafeInteger(count) || count < 1 || !Number.isFinite(hours) || hours <= 0 || hours > 100000) {
+    throw new Error('Valid labourer count and hours per labourer are required');
+  }
+  return {
+    currency: 'AED',
+    serviceFee: Number((count * hours).toFixed(2)),
+    ratePerLabourerHour: 1,
+    labourers: count,
+    hoursPerLabourer: hours,
+    calculationBasis: 'manpower_labourer_hours',
+    paymentTrigger: 'as_specified_in_vendor_terms'
+  };
+}
+
+export function calculateVendorServiceCharge({ category, awardedValue, labourers, hoursPerLabourer }) {
+  return /manpower|labou?r supply/i.test(String(category || ''))
+    ? calculateManpowerServiceCharge(labourers, hoursPerLabourer)
+    : calculateServiceFee(awardedValue);
+}
+
 export function calculateServiceFee(orderValue, rules = DEFAULT_SERVICE_FEE) {
   const value = Number(orderValue);
   if (!Number.isFinite(value) || value < 0) throw new Error('A valid non-negative order value is required');
