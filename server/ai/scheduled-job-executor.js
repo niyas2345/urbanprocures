@@ -252,14 +252,27 @@ export class ScheduledJobExecutor {
   }
 }
 
+function scheduledJobsSecret(request, env) {
+  const expected = String(env.SCHEDULED_JOBS_SECRET || '').trim();
+  if (!expected) return false;
+  const bearer = request.headers.get('Authorization')?.match(/^Bearer\s+(.+)$/i)?.[1] || '';
+  const supplied = request.headers.get('X-Scheduled-Jobs-Secret') || bearer;
+  return supplied.length >= 32 && supplied === expected;
+}
+
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+  });
+}
+
 // HTTP endpoint handler for manual triggering
 export async function handleScheduledJobsRequest(request, env) {
+  if (!scheduledJobsSecret(request, env)) return jsonResponse({ ok: false, error: 'Unauthorized' }, 401);
   const executor = new ScheduledJobExecutor(env);
   const result = await executor.executeAll();
-  return new Response(JSON.stringify(result), {
-    headers: { 'Content-Type': 'application/json' },
-    status: result.ok ? 200 : 500
-  });
+  return jsonResponse(result, result.ok ? 200 : 500);
 }
 
 // Cloudflare Worker scheduled handler
