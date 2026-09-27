@@ -25,6 +25,7 @@
         <button onclick="navigateTo('public-rfq')">Get Quotes</button>
         <button class="active">Vendors</button>
         <button onclick="navigateTo('reviews')">Reviews</button>
+        <button onclick="navigateTo('faq')">FAQ</button>
         <span class="lab">Account</span>
         <button onclick="navigateTo('signup#vendor')">Vendor sign up</button>
         <button onclick="navigateTo('signin')">Sign In</button>
@@ -43,12 +44,33 @@
         <div>
           <p class="eyebrow">Verified suppliers</p>
           <h1>Vendor Directory</h1>
-          <p class="sub">Browse verified UAE construction suppliers and contractors.</p>
+          <p class="sub">Browse verified UAE construction suppliers and contractors, or register your company to receive matched RFQ invitations.</p>
         </div>
         <div class="row">
-          <button class="btn" type="button" onclick="navigateTo('signup')">Register as Vendor</button>
+          <button class="btn" type="button" onclick="navigateTo('signup#vendor')">Register as Vendor</button>
         </div>
       </header>
+
+      <section class="panel">
+        <header>
+          <h3>Why vendors join</h3>
+          <span class="chip new">Admin verified</span>
+        </header>
+        <div class="g3" style="margin-top:1rem">
+          <div class="how-step" style="flex-direction:column;align-items:flex-start;padding:1.25rem">
+            <strong>Relevant RFQ invitations</strong>
+            <p class="muted" style="font-size:.88rem;margin-top:.5rem">Verified vendors can be matched to construction, fit-out, MEP, material, manpower and equipment requirements.</p>
+          </div>
+          <div class="how-step" style="flex-direction:column;align-items:flex-start;padding:1.25rem">
+            <strong>Quote with documents</strong>
+            <p class="muted" style="font-size:.88rem;margin-top:.5rem">Submit quotation values, notes and quotation files from the vendor workspace when an RFQ is assigned to you.</p>
+          </div>
+          <div class="how-step" style="flex-direction:column;align-items:flex-start;padding:1.25rem">
+            <strong>Fair marketplace record</strong>
+            <p class="muted" style="font-size:.88rem;margin-top:.5rem">Awards, submitted quotes and verification decisions are tracked so serious vendors can build platform history.</p>
+          </div>
+        </div>
+      </section>
 
       <!-- Filters -->
       <div class="panel">
@@ -99,6 +121,7 @@
             <button onclick="navigateTo('public-rfq')">Get Quotes</button>
             <button onclick="navigateTo('vendors')">Vendors</button>
             <button onclick="navigateTo('reviews')">Reviews</button>
+            <button onclick="navigateTo('faq')">FAQ</button>
           </nav>
           <nav class="footer-col">
             <strong>Legal</strong>

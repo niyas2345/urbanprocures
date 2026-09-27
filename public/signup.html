@@ -15,9 +15,17 @@
       <small>Built for UAE construction and technical services.</small>
     </aside>
     <main class="auth-main">
-      <nav class="auth-nav" aria-label="Account navigation"><a href="/">Home</a><a href="/how">How it works</a><span>Already registered? <a class="text-link" href="/signin">Sign in</a></span></nav>
+      <nav class="auth-nav" aria-label="Account navigation"><a href="/">Home</a><a href="/how">How it works</a><a href="/faq">FAQ</a><span>Already registered? <a class="text-link" href="/signin">Sign in</a></span></nav>
       <div class="auth-content auth-content-wide">
         <header class="auth-title"><p class="eyebrow">JOIN URBAN PROCURES</p><h1>Create your account</h1><p>Choose how you use the platform.</p></header>
+        <section class="panel" style="margin-bottom:1rem">
+          <header><h3>What happens after signup</h3><span class="chip">Secure workspace</span></header>
+          <div class="g3" style="margin-top:1rem">
+            <div class="how-step" style="flex-direction:column;align-items:flex-start;padding:1rem"><strong>Verify your email</strong><p class="muted" style="font-size:.82rem;margin-top:.4rem">Account access starts after email verification so workspaces stay accountable.</p></div>
+            <div class="how-step" style="flex-direction:column;align-items:flex-start;padding:1rem"><strong>Protected details</strong><p class="muted" style="font-size:.82rem;margin-top:.4rem">Client and vendor contact details are controlled inside the workspace and admin desk.</p></div>
+            <div class="how-step" style="flex-direction:column;align-items:flex-start;padding:1rem"><strong>Support desk ready</strong><p class="muted" style="font-size:.82rem;margin-top:.4rem">For registration help, email <a href="mailto:desk@urbanprocures.com">desk@urbanprocures.com</a>.</p></div>
+          </div>
+        </section>
         <section id="step1" class="role-grid" aria-label="Choose account type">
           <button class="role-card" type="button" onclick="selectRole('client')"><span class="role-glyph">C</span><span><strong>Client / Contractor</strong><small>Post work, compare quotations and choose a vendor.</small></span><span class="role-arrow" aria-hidden="true">↗</span></button>
           <button class="role-card" type="button" onclick="selectRole('vendor')"><span class="role-glyph role-glyph-coral">V</span><span><strong>Vendor / Supplier</strong><small>Complete your profile and quote on eligible requests.</small></span><span class="role-arrow" aria-hidden="true">↗</span></button>
@@ -39,7 +47,7 @@
             <div class="terms-box"><p><strong>Client terms</strong><a href="/terms/client" target="_blank" rel="noopener">Read the full terms ↗</a></p><label class="check-row"><input id="clientClickwrapAccept" name="clientClickwrapAccept" type="checkbox" required><span>I have read and agree to the <a href="/terms/client" target="_blank" rel="noopener">Client Terms and Conditions</a>.</span></label></div>
             <p class="form-msg" id="clientFormMsg" hidden></p>
             <button id="submitClientRegistration" class="button button-full" type="submit" disabled>Create client account</button>
-            <p class="form-caption">Client accounts can post requests after registration.</p>
+            <p class="form-caption">Client accounts can post requests after registration. Your identity remains protected while the RFQ is reviewed and shared with vendors.</p>
           </form>
         </section>
 
@@ -60,7 +68,7 @@
               <fieldset class="category-field"><legend>Work categories <b>*</b></legend><div class="category-grid">
                 <label><input type="checkbox" name="categories" value="civil"> Civil works</label><label><input type="checkbox" name="categories" value="mep"> MEP</label><label><input type="checkbox" name="categories" value="electrical"> Electrical</label><label><input type="checkbox" name="categories" value="hvac"> HVAC</label><label><input type="checkbox" name="categories" value="finishing"> Finishing</label><label><input type="checkbox" name="categories" value="manpower"> Manpower</label><label><input type="checkbox" name="categories" value="materials"> Materials</label><label><input type="checkbox" name="categories" value="equipment"> Equipment</label>
               </div></fieldset>
-            </div><p class="form-caption">Vendor profiles remain pending until the platform reviews the licence.</p></div>
+            </div><p class="form-caption">After email verification, upload your licence from the vendor workspace so the admin desk can approve your company for RFQ invitations.</p></div>
             <div class="terms-box"><p><strong>Vendor terms</strong><a href="/terms/vendor" target="_blank" rel="noopener">Read the full terms ↗</a></p><label class="check-row"><input id="clickwrapAccept" name="clickwrapAccept" type="checkbox" required><span>I agree to the <a href="/terms/vendor" target="_blank" rel="noopener">Vendor Terms and Conditions</a>, including platform fees and identity protection until award.</span></label></div>
             <p class="form-msg" id="vendorFormMsg" hidden></p>
             <button id="submitRegistration" class="button button-full" type="submit" disabled>Create vendor account</button>
