@@ -152,7 +152,7 @@ async function handle(request,env) {
   }
   if(path==='/api/native/admin/accounts'&&method==='GET') {
     const error=requireRole(user,['admin']);if(error)return error;
-    const rows=await db.prepare('SELECT u.id AS user_id,u.email,u.role,u.verified_at,c.id AS company_id,c.company_name,c.contact_name,c.verification_status,c.trade_license_no,c.license_expiry FROM users u LEFT JOIN companies c ON c.owner_user_id=u.id ORDER BY u.created_at DESC LIMIT 100').all();return json({ok:true,accounts:rows.results});
+    const rows=await db.prepare('SELECT u.id AS user_id,u.email,u.role,u.verified_at,u.created_at,c.id AS company_id,c.company_name,c.contact_name,c.contact_email,c.phone,c.trade_license_no,c.license_expiry,c.categories,c.emirate,c.verification_status,c.verified_at AS company_verified_at,c.created_at AS company_created_at FROM users u LEFT JOIN companies c ON c.owner_user_id=u.id ORDER BY u.created_at DESC LIMIT 100').all();return json({ok:true,accounts:rows.results});
   }
   const verifyAccount=path.match(/^\/api\/native\/admin\/accounts\/([^/]+)\/verify$/);
   if(verifyAccount&&method==='POST') {
