@@ -12,7 +12,7 @@ export const PAGE_ROUTES = Object.freeze({
   '/admin/users': '/dashboard-admin.html', '/admin/rfqs': '/dashboard-admin.html',
   '/admin/awards': '/dashboard-admin.html', '/admin/invoices': '/dashboard-admin.html', '/admin/site-visits': '/dashboard-admin.html',
   '/admin/stats': '/dashboard-admin.html', '/admin/settings': '/dashboard-admin.html',
-  '/rfq/new': '/public-rfq.html', '/how': '/how.html', '/vendors': '/vendors.html',
+  '/rfq/new': '/public-rfq.html', '/how': '/how.html', '/vendors': '/vendors.html', '/support': '/support.html',
   '/client': '/client.html', '/about': '/about.html', '/contact': '/contact.html',
   '/privacy': '/privacy.html', '/cookies': '/cookies.html',
   '/terms/client': '/terms-client.html', '/terms/vendor': '/terms-vendor.html'
@@ -23,7 +23,7 @@ const LEGACY = Object.freeze({
   '/reset-password.html': '/reset-password', '/verify-email.html': '/verify-email', '/dashboard-client.html': '/client/dashboard',
   '/dashboard-vendor.html': '/vendor/dashboard', '/dashboard-admin.html': '/admin/dashboard',
   '/public-rfq.html': '/rfq/new', '/how.html': '/how', '/vendors.html': '/vendors',
-  '/client.html': '/client', '/about.html': '/about', '/contact.html': '/contact',
+  '/client.html': '/client', '/about.html': '/about', '/contact.html': '/contact', '/support.html': '/support',
   '/privacy.html': '/privacy', '/cookies.html': '/cookies',
   '/terms-client.html': '/terms/client', '/terms-vendor.html': '/terms/vendor',
   '/login': '/signin', '/login.html': '/signin', '/register': '/signup', '/register.html': '/signup',

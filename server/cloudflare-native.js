@@ -71,8 +71,8 @@ async function handle(request,env) {
     const error=requireRole(user,['client','vendor','admin']);if(error)return error;
     const form=await request.formData();const file=form.get('file'),kind=clean(form.get('kind'),30),ownerId=clean(form.get('owner_id'),100);
     if(!(file instanceof File)||file.size<1||file.size>10_000_000||!['application/pdf','image/jpeg','image/png'].includes(file.type))return bad('PDF, JPEG or PNG under 10 MB required');
-    if(!['rfq','quotation','site_visit'].includes(kind))return bad('Invalid document type');
-    const owner=kind==='rfq'?await db.prepare('SELECT c.owner_user_id FROM rfqs r JOIN companies c ON c.id=r.client_company_id WHERE r.id=?').bind(ownerId).first():kind==='quotation'?await db.prepare('SELECT c.owner_user_id FROM quotations q JOIN companies c ON c.id=q.vendor_company_id WHERE q.id=?').bind(ownerId).first():null;
+    if(!['company','rfq','quotation','site_visit'].includes(kind))return bad('Invalid document type');
+    const owner=kind==='company'?await db.prepare('SELECT owner_user_id FROM companies WHERE id=?').bind(ownerId).first():kind==='rfq'?await db.prepare('SELECT c.owner_user_id FROM rfqs r JOIN companies c ON c.id=r.client_company_id WHERE r.id=?').bind(ownerId).first():kind==='quotation'?await db.prepare('SELECT c.owner_user_id FROM quotations q JOIN companies c ON c.id=q.vendor_company_id WHERE q.id=?').bind(ownerId).first():null;
     if(user.role!=='admin'&&owner?.owner_user_id!==user.id)return bad('Document owner required',403);
     const bucket=kind==='quotation'?env.URBAN_PROCURE_QUOTE_DOCUMENTS:env.URBAN_PROCURE_RFQ_DOCUMENTS;
     if(!bucket)return bad('Private storage unavailable',503);
@@ -88,7 +88,7 @@ async function handle(request,env) {
     if(user.role!=='admin'&&doc.uploaded_by!==user.id)return bad('Access denied',403);
     const bucket=doc.owner_kind==='quotation'?env.URBAN_PROCURE_QUOTE_DOCUMENTS:env.URBAN_PROCURE_RFQ_DOCUMENTS;
     const object=await bucket?.get(doc.storage_key);if(!object)return bad('Not found',404);
-    return new Response(object.body,{headers:{'Content-Type':doc.mime_type,'Content-Disposition':'attachment; filename="document"','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
+    return new Response(object.body,{headers:{'Content-Type':doc.mime_type,'Content-Disposition':`attachment; filename="${encodeURIComponent(doc.original_name||'document')}"`,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
   }
   if(path==='/api/native/health'&&method==='GET')return json({ok:true,database:true,emailConfigured:directMailConfigured(env),turnstileConfigured:!!env.TURNSTILE_SECRET});
   if(path==='/api/native/public/stats'&&method==='GET') {
@@ -203,6 +203,22 @@ async function handle(request,env) {
   if(path==='/api/native/admin/site-visits'&&method==='GET') {
     const error=requireRole(user,['admin']);if(error)return error;
     const visits=await db.prepare('SELECT v.*,p.reference,p.name,p.phone,p.email,p.location,p.title,p.scope FROM site_visits v JOIN public_requests p ON p.id=v.request_id ORDER BY v.updated_at DESC LIMIT 100').all();return json({ok:true,visits:visits.results});
+  }
+  if(path==='/api/native/admin/documents'&&method==='GET') {
+    const error=requireRole(user,['admin']);if(error)return error;
+    const rows=await db.prepare(`SELECT d.id,d.owner_kind,d.owner_id,d.original_name,d.mime_type,d.size_bytes,d.review_status,d.created_at,u.email AS uploaded_by_email,
+      COALESCE(r.reference,p.reference,q.rfq_id,c.company_name,v.reference) AS owner_reference,
+      COALESCE(r.title,p.title,c.company_name,v.title) AS owner_title
+      FROM documents d
+      LEFT JOIN users u ON u.id=d.uploaded_by
+      LEFT JOIN rfqs r ON d.owner_kind='rfq' AND r.id=d.owner_id
+      LEFT JOIN public_requests p ON d.owner_kind='public_request' AND p.id=d.owner_id
+      LEFT JOIN quotations q ON d.owner_kind='quotation' AND q.id=d.owner_id
+      LEFT JOIN companies c ON d.owner_kind='company' AND c.id=d.owner_id
+      LEFT JOIN site_visits sv ON d.owner_kind='site_visit' AND sv.id=d.owner_id
+      LEFT JOIN public_requests v ON sv.request_id=v.id
+      ORDER BY d.created_at DESC LIMIT 200`).all();
+    return json({ok:true,documents:rows.results});
   }
   if(path==='/api/native/admin/public-requests'&&method==='GET') {
     const error=requireRole(user,['admin']);if(error)return error;
