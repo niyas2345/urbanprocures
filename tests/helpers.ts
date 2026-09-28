@@ -44,6 +44,7 @@ export const createEnv = (): Env =>
     ZOHO_CLIENT_SECRET: "",
     ZOHO_REFRESH_TOKEN: "",
     ZOHO_ACCOUNT_ID: "",
+    ZOHO_DC: "com",
     ZOHO_SENDER_EMAIL: "noreply@urbanprocures.com",
     ZOHO_FROM_EMAIL: "desk@urbanprocures.com",
     MAILGUN_API_KEY: "key-test",

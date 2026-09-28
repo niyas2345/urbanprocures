@@ -91,6 +91,7 @@ export interface Env {
   ZOHO_CLIENT_SECRET: string;
   ZOHO_REFRESH_TOKEN: string;
   ZOHO_ACCOUNT_ID: string;
+  ZOHO_DC: string;
   ZOHO_SENDER_EMAIL: string;
   ZOHO_FROM_EMAIL: string;
   MAILGUN_API_KEY: string;

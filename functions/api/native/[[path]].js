@@ -164,12 +164,16 @@ const sendMailgunInvite = async (env, prospect) => {
   return { sent: true, status: "sent", reason: "MAILGUN" };
 };
 
-const sendZohoInvite = async (env, prospect) => {
-  const fromAddress = env.ZOHO_SENDER_EMAIL || env.ZOHO_FROM_EMAIL;
-  if (!env.ZOHO_CLIENT_ID || !env.ZOHO_CLIENT_SECRET || !env.ZOHO_REFRESH_TOKEN || !env.ZOHO_ACCOUNT_ID || !fromAddress) {
-    return { sent: false, status: "queued", reason: "ZOHO credentials not configured" };
-  }
-  const tokenResponse = await fetch("https://accounts.zoho.com/oauth/v2/token", {
+const zohoDc = (env) => {
+  const dc = String(env.ZOHO_DC || "com").trim().toLowerCase().replace(/^zoho\./, "");
+  return dc || "com";
+};
+
+const zohoAccountsHost = (env) => `https://accounts.zoho.${zohoDc(env)}`;
+const zohoMailHost = (env) => `https://mail.zoho.${zohoDc(env)}`;
+
+const zohoToken = async (env) => {
+  const tokenResponse = await fetch(`${zohoAccountsHost(env)}/oauth/v2/token`, {
     method: "POST",
     body: new URLSearchParams({
       client_id: env.ZOHO_CLIENT_ID,
@@ -178,21 +182,109 @@ const sendZohoInvite = async (env, prospect) => {
       grant_type: "refresh_token",
     }),
   });
-  if (!tokenResponse.ok) return { sent: false, status: "failed", reason: `ZOHO token ${tokenResponse.status}` };
-  const tokenData = await tokenResponse.json();
-  const response = await fetch(`https://mail.zoho.com/api/accounts/${env.ZOHO_ACCOUNT_ID}/messages`, {
+  if (!tokenResponse.ok) return { error: `ZOHO token ${tokenResponse.status}` };
+  return tokenResponse.json();
+};
+
+const zohoHeaders = (accessToken) => ({
+  Authorization: `Zoho-oauthtoken ${accessToken}`,
+  "Content-Type": "application/json",
+  Accept: "application/json",
+});
+
+const zohoAccountCandidates = async (env, accessToken, fromAddress) => {
+  const response = await fetch(`${zohoMailHost(env)}/api/accounts`, { headers: zohoHeaders(accessToken) });
+  if (!response.ok) return [];
+  const data = await response.json();
+  const accounts = Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : Array.isArray(data.accounts) ? data.accounts : [];
+  const normalizedFrom = String(fromAddress || "").toLowerCase();
+  const score = (account) => {
+    const values = [
+      account.accountId,
+      account.accountID,
+      account.id,
+      account.mailboxAddress,
+      account.primaryEmailAddress,
+      account.emailAddress,
+      account.incomingUserName,
+      account.displayName,
+    ].map((value) => String(value || "").toLowerCase());
+    return values.includes(normalizedFrom) ? 0 : 1;
+  };
+  return accounts
+    .slice()
+    .sort((a, b) => score(a) - score(b))
+    .map((account) => account.accountId || account.accountID || account.id)
+    .filter(Boolean);
+};
+
+const postZohoMessage = async (env, accessToken, accountId, payload) =>
+  fetch(`${zohoMailHost(env)}/api/accounts/${accountId}/messages`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${tokenData.access_token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      fromAddress,
-      toAddress: [prospect.email],
-      subject: inviteSubject,
-      content: inviteBody(prospect, env).replace(/\n/g, "<br>"),
-      isHtml: true,
-    }),
+    headers: zohoHeaders(accessToken),
+    body: JSON.stringify(payload),
   });
-  if (!response.ok) return { sent: false, status: "failed", reason: `ZOHO mail ${response.status}` };
-  return { sent: true, status: "sent", reason: "ZOHO" };
+
+const sendZohoPayload = async (env, payload) => {
+  const tokenData = await zohoToken(env);
+  if (tokenData.error) return { sent: false, status: "failed", reason: tokenData.error };
+  const configuredId = env.ZOHO_ACCOUNT_ID;
+  let response = await postZohoMessage(env, tokenData.access_token, configuredId, payload);
+  if (response.ok) return { sent: true, status: "sent", reason: "ZOHO" };
+  if (response.status !== 404) return { sent: false, status: "failed", reason: `ZOHO mail ${response.status}` };
+
+  const candidates = await zohoAccountCandidates(env, tokenData.access_token, payload.fromAddress);
+  for (const accountId of candidates.filter((id) => String(id) !== String(configuredId))) {
+    response = await postZohoMessage(env, tokenData.access_token, accountId, payload);
+    if (response.ok) return { sent: true, status: "sent", reason: "ZOHO account auto-discovered" };
+  }
+  return { sent: false, status: "failed", reason: candidates.length ? "ZOHO mail 404 after account lookup" : "ZOHO account lookup returned no accounts" };
+};
+
+const sendZohoInvite = async (env, prospect) => {
+  const fromAddress = env.ZOHO_SENDER_EMAIL || env.ZOHO_FROM_EMAIL;
+  if (!env.ZOHO_CLIENT_ID || !env.ZOHO_CLIENT_SECRET || !env.ZOHO_REFRESH_TOKEN || !env.ZOHO_ACCOUNT_ID || !fromAddress) {
+    return { sent: false, status: "queued", reason: "ZOHO credentials not configured" };
+  }
+  return sendZohoPayload(env, {
+    fromAddress,
+    toAddress: prospect.email,
+    subject: inviteSubject,
+    content: inviteBody(prospect, env).replace(/\n/g, "<br>"),
+    isHtml: true,
+  });
+};
+
+const sendZohoMessage = async (env, { to, subject, html }) => {
+  const fromAddress = env.ZOHO_SENDER_EMAIL || env.ZOHO_FROM_EMAIL;
+  if (!env.ZOHO_CLIENT_ID || !env.ZOHO_CLIENT_SECRET || !env.ZOHO_REFRESH_TOKEN || !env.ZOHO_ACCOUNT_ID || !fromAddress) {
+    return { sent: false, status: "queued", reason: "ZOHO credentials not configured" };
+  }
+  return sendZohoPayload(env, {
+    fromAddress,
+    toAddress: to,
+    subject,
+    content: html,
+    isHtml: true,
+  });
+};
+
+const sendMailgunMessage = async (env, { to, subject, text }) => {
+  if (!env.MAILGUN_API_KEY || !env.MAILGUN_DOMAIN || !env.MAILGUN_SENDER_EMAIL) {
+    return { sent: false, status: "queued", reason: "MAILGUN credentials not configured" };
+  }
+  const form = new FormData();
+  form.set("from", env.MAILGUN_SENDER_EMAIL);
+  form.set("to", to);
+  form.set("subject", subject);
+  form.set("text", text);
+  const response = await fetch(`https://api.mailgun.net/v3/${env.MAILGUN_DOMAIN}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Basic ${btoa(`api:${env.MAILGUN_API_KEY}`)}` },
+    body: form,
+  });
+  if (!response.ok) return { sent: false, status: "failed", reason: `MAILGUN ${response.status}` };
+  return { sent: true, status: "sent", reason: "MAILGUN" };
 };
 
 const sendInvite = async (env, prospect) => {
@@ -201,6 +293,27 @@ const sendInvite = async (env, prospect) => {
   }
   if (env.ZOHO_CLIENT_ID) return sendZohoInvite(env, prospect);
   return sendMailgunInvite(env, prospect);
+};
+
+const sendAdminInviteSummary = async (env, { adminEmail, date, invites, category, emirate }) => {
+  const rows = invites
+    .map(
+      (invite) =>
+        `<tr><td>${invite.name}</td><td>${invite.recipient}</td><td>${invite.type}</td><td>${invite.domain}</td><td>${invite.email_status}</td><td>${invite.prospect_status}</td></tr>`,
+    )
+    .join("");
+  const html = `<h2>Urban Procures daily invite list - ${date}</h2>
+<p>Category: ${category || "All"}<br>Coverage: ${emirate || "UAE"}<br>Total records: ${invites.length}</p>
+<table border="1" cellpadding="6" cellspacing="0">
+<thead><tr><th>Company</th><th>Email</th><th>Type</th><th>Domain</th><th>Status</th><th>Note</th></tr></thead>
+<tbody>${rows || '<tr><td colspan="6">No invites recorded.</td></tr>'}</tbody>
+</table>`;
+  const text = `Urban Procures daily invite list - ${date}\n\n${invites
+    .map((invite) => `${invite.name} | ${invite.recipient} | ${invite.type} | ${invite.email_status} | ${invite.prospect_status}`)
+    .join("\n")}`;
+  const subject = `Urban Procures daily invite list - ${date}`;
+  if (env.ZOHO_CLIENT_ID) return sendZohoMessage(env, { to: adminEmail, subject, html });
+  return sendMailgunMessage(env, { to: adminEmail, subject, text });
 };
 
 const emailDeliveryConfigured = (env) =>
@@ -356,6 +469,15 @@ async function handleAdmin(path, request, env, session) {
       await env.KV.put(`outreach:${date}`, JSON.stringify([...invites, ...previous].slice(0, 500)));
     }
 
+    const adminEmail = env.ADMIN_EMAIL || "urbanprocures@gmail.com";
+    const adminSummary = await sendAdminInviteSummary(env, {
+      adminEmail,
+      date,
+      invites,
+      category: body.category,
+      emirate: body.emirate,
+    });
+
     return json({
       prospects: invites.map((invite) => ({
         name: invite.name,
@@ -369,6 +491,7 @@ async function handleAdmin(path, request, env, session) {
       skipped,
       target: prospects.length,
       emailConfigured: emailDeliveryConfigured(env),
+      adminSummary: { recipient: adminEmail, ...adminSummary },
     });
   }
 
