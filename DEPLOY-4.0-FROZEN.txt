@@ -1,4 +1,0 @@
-Urban Procures 4.0 production source
-Frozen snapshot date: 2026-09-18
-Frontend: dashboard module + restored public/auth entry (no PLACEHOLDER_SEE_NEXT)
-Build: npm run build -> dist/_worker.js + dist/server/index.js

@@ -1,0 +1,35 @@
+name = "urbanporcures-2-0"
+main = "src/index.ts"
+compatibility_date = "2025-09-27"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+html_handling = "auto-trailing-slash"
+not_found_handling = "404-page"
+
+[env.production]
+name = "urbanporcures-2-0-prod"
+route = "urbanprocures.com/*"
+zone_id = "YOUR_ZONE_ID"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "71e4a67217974526851bef9ebc81fb24"
+preview_id = "71e4a67217974526851bef9ebc81fb24"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "urbanporcures-2-0-backups"
+
+[triggers]
+crons = ["*/2 * * * *", "0 2 * * *"]
+
+[env.production.vars]
+ZOHO_ACCOUNT_ID = "YOUR_ACCOUNT_ID"
+ZOHO_SENDER_EMAIL = "noreply@urbanprocures.com"
+MAILGUN_DOMAIN = "mail.urbanprocures.com"
+MAILGUN_SENDER_EMAIL = "noreply@urbanprocures.com"
