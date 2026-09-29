@@ -39,6 +39,10 @@ const LEGACY = Object.freeze({
   '/legal/client-terms.html': '/terms/client', '/favicon.ico': '/assets/favicon.png'
 });
 
+const GENERATED_REDIRECTS = Object.freeze({
+  '/cdn-cgi/l/email-protection': '/contact'
+});
+
 function redirect(url, path) {
   return new Response(null, { status: 308, headers: { Location: path + url.search } });
 }
@@ -66,6 +70,8 @@ export async function serveStatic(pathname, request, env = {}, assets = {}) {
   if (pathname.startsWith('/api/')) return missing(pathname, assets);
   const path = pathname !== '/' ? pathname.replace(/\/+$/, '') : '/';
   if (path !== pathname) return redirect(url, path);
+  const generated = GENERATED_REDIRECTS[path];
+  if (generated) return redirect(url, generated);
   const legacy = LEGACY[path];
   if (legacy) return redirect(url, legacy);
 
