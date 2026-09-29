@@ -1,7 +1,7 @@
 import type { Env } from "./types";
 
 export const validateZohoConfig = (env: Env): boolean =>
-  Boolean(env.ZOHO_CLIENT_ID && env.ZOHO_CLIENT_SECRET && env.ZOHO_REFRESH_TOKEN && env.ZOHO_ACCOUNT_ID && (env.ZOHO_SENDER_EMAIL || env.ZOHO_FROM_EMAIL));
+  Boolean(env.ZOHO_CLIENT_ID && env.ZOHO_CLIENT_SECRET && env.ZOHO_REFRESH_TOKEN && env.ZOHO_ACCOUNT_ID && env.ZOHO_SENDER_EMAIL);
 
 export const getZohoAccessToken = async (env: Env): Promise<string> => {
   const cached = await env.KV.get("zoho:access_token");
@@ -30,12 +30,11 @@ export const sendZohoMail = async (
   isHtml = true,
 ): Promise<{ messageId: string; status: string }> => {
   const token = await getZohoAccessToken(env);
-  const fromAddress = env.ZOHO_SENDER_EMAIL || env.ZOHO_FROM_EMAIL;
   const response = await fetch(`https://mail.zoho.com/api/accounts/${env.ZOHO_ACCOUNT_ID}/messages`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      fromAddress,
+      fromAddress: env.ZOHO_SENDER_EMAIL,
       toAddress: [recipient],
       ccAddress: [],
       bccAddress: [],

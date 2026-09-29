@@ -92,7 +92,6 @@ export interface Env {
   ZOHO_REFRESH_TOKEN: string;
   ZOHO_ACCOUNT_ID: string;
   ZOHO_SENDER_EMAIL: string;
-  ZOHO_FROM_EMAIL: string;
   MAILGUN_API_KEY: string;
   MAILGUN_DOMAIN: string;
   MAILGUN_SENDER_EMAIL: string;
