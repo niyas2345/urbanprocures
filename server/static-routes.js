@@ -1,6 +1,6 @@
 /** Canonical public routes. Keep these independent of the Pages asset lookup. */
 export const PAGE_ROUTES = Object.freeze({
-  '/': '/index.html', '/signup': '/signup.html', '/signin': '/signin.html', '/admin/login': '/admin-login.html',
+  '/': '/index.html', '/signup': '/signup.html', '/signin': '/signin.html', '/admin/login': '/admin-login.html', '/admin-login': '/admin-login.html',
   '/reset-password': '/reset-password.html', '/verify-email': '/verify-email.html',
   '/client/dashboard': '/dashboard-client.html', '/client/projects': '/dashboard-client.html',
   '/client/rfqs': '/dashboard-client.html', '/client/quotations': '/dashboard-client.html',
@@ -8,7 +8,7 @@ export const PAGE_ROUTES = Object.freeze({
   '/vendor/dashboard': '/dashboard-vendor.html', '/vendor/invitations': '/dashboard-vendor.html',
   '/vendor/quotations': '/dashboard-vendor.html', '/vendor/awards': '/dashboard-vendor.html',
   '/vendor/messages': '/dashboard-vendor.html', '/vendor/settings': '/dashboard-vendor.html',
-  '/admin/dashboard': '/dashboard-admin.html', '/admin/documents': '/dashboard-admin.html', '/admin/vendors': '/dashboard-admin.html',
+  '/admin/dashboard': '/dashboard-admin.html', '/admin/growth': '/dashboard-admin.html', '/admin/documents': '/dashboard-admin.html', '/admin/vendors': '/dashboard-admin.html',
   '/admin/users': '/dashboard-admin.html', '/admin/rfqs': '/dashboard-admin.html',
   '/admin/awards': '/dashboard-admin.html', '/admin/invoices': '/dashboard-admin.html', '/admin/site-visits': '/dashboard-admin.html',
   '/admin/stats': '/dashboard-admin.html', '/admin/settings': '/dashboard-admin.html',
