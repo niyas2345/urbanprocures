@@ -3,20 +3,15 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#102b3b">
-  <script type="module" src="https://urbanprocures.com/.webmcp/bridge.js" data-packs="mcp-server-client"></script><link rel="icon" href="/assets/favicon-ITXu3E6w.png"><script src="/js/routes.js"></script>
+  <link rel="icon" href="/assets/favicon.png"><link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/platform.css"><script src="/js/routes.js"></script>
   <title>Create an account | Urban Procures</title>
-  <script type="module" crossorigin src="/assets/modulepreload-polyfill-B5Qt9EMX.js"></script>
-  <script type="module" crossorigin src="/assets/native-auth-C5tv2gpy.js?v=auth-20260928"></script>
-  <link rel="stylesheet" crossorigin href="/assets/styles--ep9HACF.css">
-  <link rel="stylesheet" crossorigin href="/assets/platform-BZjLUEVG.css">
-<style id="prod-harden">[data-reset],[data-owner-unlock]{display:none!important}</style>  <link rel="stylesheet" href="/assets/live-theme-fix.css">
 </head>
 <body data-page="signup.html">
   <div class="auth-layout">
     <aside class="auth-rail">
-      <a class="brand brand-light" href="/"><img src="/assets/logo-mark-CxtG8hpI.png" width="38" height="42" alt=""><span>URBAN <b>PROCURES</b></span></a>
+      <a class="brand brand-light" href="/"><img src="/assets/logo-mark.png" width="38" height="42" alt=""><span>URBAN <b>PROCURES</b></span></a>
       <div class="auth-rail-copy"><p class="eyebrow">A clearer procurement desk</p><h2>One brief.<br>Better decisions.</h2><p>Manage requests, quotations and awards in one place.</p></div>
-      <div class="rail-note"><span>01</span><p>Contractor, vendor and admin workspaces stay separate.</p></div>
+      <div class="rail-note"><span>01</span><p>Client, vendor and admin workspaces stay separate.</p></div>
       <small>Built for UAE construction and technical services.</small>
     </aside>
     <main class="auth-main">
@@ -27,17 +22,17 @@
           <header><h3>What happens after signup</h3><span class="chip">Secure workspace</span></header>
           <div class="g3" style="margin-top:1rem">
             <div class="how-step" style="flex-direction:column;align-items:flex-start;padding:1rem"><strong>Verify your email</strong><p class="muted" style="font-size:.82rem;margin-top:.4rem">Account access starts after email verification so workspaces stay accountable.</p></div>
-            <div class="how-step" style="flex-direction:column;align-items:flex-start;padding:1rem"><strong>Protected details</strong><p class="muted" style="font-size:.82rem;margin-top:.4rem">Contractor and vendor contact details are controlled inside the workspace and admin desk.</p></div>
-            <div class="how-step" style="flex-direction:column;align-items:flex-start;padding:1rem"><strong>Support desk ready</strong><p class="muted" style="font-size:.82rem;margin-top:.4rem">For registration help, email <a href="/cdn-cgi/l/email-protection#274342544c67525545464957554844525542540944484a"><span class="__cf_email__" data-cfemail="ef8b8a9c84af9a9d8d8e819f9d808c9a9d8a9cc18c8082">[email&#160;protected]</span></a>.</p></div>
+            <div class="how-step" style="flex-direction:column;align-items:flex-start;padding:1rem"><strong>Protected details</strong><p class="muted" style="font-size:.82rem;margin-top:.4rem">Client and vendor contact details are controlled inside the workspace and admin desk.</p></div>
+            <div class="how-step" style="flex-direction:column;align-items:flex-start;padding:1rem"><strong>Support desk ready</strong><p class="muted" style="font-size:.82rem;margin-top:.4rem">For registration help, email <a href="mailto:desk@urbanprocures.com">desk@urbanprocures.com</a>.</p></div>
           </div>
         </section>
         <section id="step1" class="role-grid" aria-label="Choose account type">
-          <button class="role-card" type="button" onclick="selectRole('client')"><span class="role-glyph">C</span><span><strong>Contractor</strong><small>Post work, compare quotations and choose a vendor.</small></span><span class="role-arrow" aria-hidden="true">↗</span></button>
-          <button class="role-card" type="button" onclick="selectRole('vendor')"><span class="role-glyph role-glyph-coral">V</span><span><strong>Vendor / Subcontractor</strong><small>Complete your profile and quote on eligible requests.</small></span><span class="role-arrow" aria-hidden="true">↗</span></button>
+          <button class="role-card" type="button" onclick="selectRole('client')"><span class="role-glyph">C</span><span><strong>Client / Contractor</strong><small>Post work, compare quotations and choose a vendor.</small></span><span class="role-arrow" aria-hidden="true">↗</span></button>
+          <button class="role-card" type="button" onclick="selectRole('vendor')"><span class="role-glyph role-glyph-coral">V</span><span><strong>Vendor / Supplier</strong><small>Complete your profile and quote on eligible requests.</small></span><span class="role-arrow" aria-hidden="true">↗</span></button>
         </section>
 
         <section id="step2Client" class="registration-card" style="display:none">
-          <div class="form-title"><button class="back-button" type="button" onclick="goBack()" aria-label="Choose a different account type">←</button><div><p class="eyebrow">CONTRACTOR WORKSPACE</p><h2>Contractor registration</h2></div></div>
+          <div class="form-title"><button class="back-button" type="button" onclick="goBack()" aria-label="Choose a different account type">←</button><div><p class="eyebrow">CLIENT WORKSPACE</p><h2>Client registration</h2></div></div>
           <form id="clientForm" class="form-stack">
             <div class="form-columns">
               <label class="field"><span>Company name <b>*</b></span><input id="companyName" name="companyName" autocomplete="organization" required placeholder="Company or contracting firm"></label>
@@ -49,10 +44,10 @@
               <label class="field"><span>City</span><input id="city" name="city" placeholder="Dubai"></label>
               <label class="field"><span>Emirate</span><select id="emirate" name="emirate"><option value="">Select an emirate</option><option value="dubai">Dubai</option><option value="abu-dhabi">Abu Dhabi</option><option value="sharjah">Sharjah</option><option value="ajman">Ajman</option><option value="rak">Ras Al Khaimah</option><option value="fujairah">Fujairah</option><option value="uaq">Umm Al Quwain</option></select></label>
             </div>
-            <div class="terms-box"><p><strong>Contractor terms</strong><a href="/terms/client" target="_blank" rel="noopener">Read the full terms ↗</a></p><label class="check-row"><input id="clientClickwrapAccept" name="clientClickwrapAccept" type="checkbox" required><span>I have read and agree to the <a href="/terms/client" target="_blank" rel="noopener">Contractor Terms and Conditions</a>.</span></label></div>
+            <div class="terms-box"><p><strong>Client terms</strong><a href="/terms/client" target="_blank" rel="noopener">Read the full terms ↗</a></p><label class="check-row"><input id="clientClickwrapAccept" name="clientClickwrapAccept" type="checkbox" required><span>I have read and agree to the <a href="/terms/client" target="_blank" rel="noopener">Client Terms and Conditions</a>.</span></label></div>
             <p class="form-msg" id="clientFormMsg" hidden></p>
-            <button id="submitClientRegistration" class="button button-full" type="submit" disabled>Create contractor account</button>
-            <p class="form-caption">Contractor accounts can post requests after registration. Your identity remains protected while the RFQ is reviewed and shared with vendors.</p>
+            <button id="submitClientRegistration" class="button button-full" type="submit" disabled>Create client account</button>
+            <p class="form-caption">Client accounts can post requests after registration. Your identity remains protected while the RFQ is reviewed and shared with vendors.</p>
           </form>
         </section>
 
@@ -60,7 +55,7 @@
           <div class="form-title"><button class="back-button" type="button" onclick="goBack()" aria-label="Choose a different account type">←</button><div><p class="eyebrow">VENDOR WORKSPACE</p><h2>Vendor registration</h2></div></div>
           <form id="vendorForm" class="form-stack">
             <div class="form-section"><h3>Company and contact</h3><div class="form-columns">
-              <label class="field"><span>Company name <b>*</b></span><input id="vCompanyName" name="vCompanyName" autocomplete="organization" required placeholder="Vendor or subcontractor company"></label>
+              <label class="field"><span>Company name <b>*</b></span><input id="vCompanyName" name="vCompanyName" autocomplete="organization" required placeholder="Trading or contracting company"></label>
               <label class="field"><span>Contact person <b>*</b></span><input id="vContactPerson" name="vContactPerson" autocomplete="name" required placeholder="Full name"></label>
               <label class="field"><span>Phone <b>*</b></span><input id="vPhone" name="vPhone" type="tel" autocomplete="tel" required placeholder="+971 50 123 4567"></label>
               <label class="field"><span>Email address <b>*</b></span><input id="vEmail" name="vEmail" type="email" autocomplete="email" required placeholder="you@company.com"></label>
@@ -84,6 +79,6 @@
       <footer class="auth-footer"><a href="/privacy">Privacy</a><a href="/terms/client">Terms</a><span>© Urban Procures</span></footer>
     </main>
   </div>
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="/js/signup-ui.js?v=contractor-20260928"></script>
+  <script src="/js/signup-ui.js"></script><script type="module" src="/js/native-auth.js"></script>
 </body>
 </html>

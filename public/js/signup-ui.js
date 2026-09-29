@@ -1,5 +1,4 @@
 function selectRole(role) {
-  if (role === 'contractor') role = 'client';
   var step1 = document.getElementById('step1');
   var step2Client = document.getElementById('step2Client');
   var step2Vendor = document.getElementById('step2Vendor');
@@ -29,10 +28,6 @@ window.goBack = goBack;
   }
   sync('clientClickwrapAccept', 'submitClientRegistration');
   sync('clickwrapAccept', 'submitRegistration');
-  function applyHashRole() {
-    var hash = (location.hash || '').replace('#', '');
-    if (hash === 'client' || hash === 'contractor' || hash === 'vendor') selectRole(hash);
-  }
-  applyHashRole();
-  window.addEventListener('hashchange', applyHashRole);
+  var hash = (location.hash || '').replace('#', '');
+  if (hash === 'client' || hash === 'vendor') selectRole(hash);
 })();

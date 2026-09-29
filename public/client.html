@@ -3,22 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contractor Portal | Urban Procures</title>
-  <script type="module" src="https://urbanprocures.com/.webmcp/bridge.js" data-packs="mcp-server-client"></script><link rel="preconnect" href="https://fonts.googleapis.com" />
+  <title>Client Portal | Urban Procures</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="icon" type="image/png" href="/assets/favicon-ITXu3E6w.png" />
-  <link rel="apple-touch-icon" href="/assets/apple-touch-icon-DOl7dlNF.png" /><script src="/js/routes.js"></script>  <script type="module" crossorigin src="/assets/modulepreload-polyfill-B5Qt9EMX.js"></script>
-  <script type="module" crossorigin src="/assets/app-YH1q-tUa.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/styles--ep9HACF.css">
-  <link rel="stylesheet" crossorigin href="/assets/platform-BZjLUEVG.css">
-<style id="prod-harden">[data-reset],[data-owner-unlock]{display:none!important}</style>  <link rel="stylesheet" href="/assets/live-theme-fix.css">
-</head>
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/css/styles.css" />
+<link rel="stylesheet" href="/css/platform.css" /><script src="/js/routes.js"></script></head>
 <body data-page="client.html">
   <div class="app" id="app">
     <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <img class="logo-mark" src="/assets/logo-mark-CxtG8hpI.png" width="36" height="40" alt="" aria-hidden="true" />
+        <img class="logo-mark" src="/assets/logo-mark.png" width="36" height="40" alt="" aria-hidden="true" />
         <span class="brand-name">Urban Procures</span>
       </div>
       <nav class="nav">
@@ -30,11 +27,11 @@
         <button onclick="navigateTo('faq')">FAQ</button>
         <span class="lab">Account</span>
         <button onclick="navigateTo('signin')">Sign In</button>
-        <button class="active">Contractor Portal</button>
+        <button class="active">Client Portal</button>
       </nav>
       <div class="side-foot">
-        <article class="trust"><strong>Contractor Benefits</strong><span>Post unlimited RFQs, manage projects, full audit trail.</span></article>
-        <article class="trust accent"><strong>Free Forever</strong><span>No charges for contractors — ever.</span></article>
+        <article class="trust"><strong>Client Benefits</strong><span>Post unlimited RFQs, manage projects, full audit trail.</span></article>
+        <article class="trust accent"><strong>Free Forever</strong><span>No charges for clients — ever.</span></article>
       </div>
     </aside>
 
@@ -49,8 +46,8 @@
       <header class="topbar">
         <div>
           <p class="eyebrow">For Contractors & Builders</p>
-          <h1>Contractor Portal</h1>
-          <p class="sub">Register as a contractor to post RFQs, attach supporting documents, compare quotations and keep project decisions organized — all for free.</p>
+          <h1>Client Portal</h1>
+          <p class="sub">Register as a client to post RFQs, attach supporting documents, compare quotations and keep project decisions organized — all for free.</p>
         </div>
       </header>
 
@@ -74,7 +71,7 @@
 
       <section class="panel">
         <header>
-          <h3>Why contractors use Urban Procures</h3>
+          <h3>Why clients use Urban Procures</h3>
           <span class="chip">Identity protected</span>
         </header>
         <div class="g3" style="margin-top:1rem">
@@ -96,7 +93,7 @@
       <div style="max-width:600px;width:100%;margin:0 auto">
         <div class="panel">
           <header>
-            <h3>Create Contractor Account</h3>
+            <h3>Create Client Account</h3>
             <span class="chip new">Free — No verification</span>
           </header>
           <form id="clientForm" style="display:grid;gap:1rem;margin-top:1rem">
@@ -165,17 +162,17 @@
             <div class="form-section">
               <h3>Terms &amp; Conditions</h3>
               <p style="font-size:.85rem;margin-bottom:.75rem">
-                <a href="/terms/client" target="_blank" style="color:var(--orange);font-weight:700">Read full Contractor Terms &amp; Conditions ↗</a>
+                <a href="/terms/client" target="_blank" style="color:var(--orange);font-weight:700">Read full Client Terms &amp; Conditions ↗</a>
               </p>
               <div class="clickwrap-check" style="margin-top:.75rem">
                 <input type="checkbox" id="clientClickwrapAccept" name="clientClickwrapAccept" required />
                 <label for="clientClickwrapAccept">
-                  I have read, understood, and agree to the <a href="/terms/client" target="_blank" style="color:var(--orange)">Urban Procures Contractor Terms and Conditions</a>.
+                  I have read, understood, and agree to the <a href="/terms/client" target="_blank" style="color:var(--orange)">Urban Procures Client Terms and Conditions</a>.
                 </label>
               </div>
             </div>
             <p class="form-msg" id="clientFormMsg" hidden></p>
-            <button type="submit" id="submitClientRegistration" class="btn" style="width:100%" disabled>Create Contractor Account</button>
+            <button type="submit" id="submitClientRegistration" class="btn" style="width:100%" disabled>Create Client Account</button>
             <p style="text-align:center;font-size:.85rem">
               Already have an account? <a href="/signin" style="color:var(--orange);font-weight:700">Sign In</a>
             </p>
@@ -185,7 +182,7 @@
 
       <div class="panel" style="margin-top:1rem">
         <header>
-          <h3>How it works for Contractors</h3>
+          <h3>How it works for Clients</h3>
         </header>
         <div class="g3" style="margin-top:1rem">
           <div class="how-step" style="flex-direction:column;text-align:center;padding:1rem">
@@ -210,7 +207,7 @@
         <div class="footer-grid">
           <div class="footer-brand">
             <div class="brand">
-              <img class="logo-mark" src="/assets/logo-mark-CxtG8hpI.png" width="36" height="40" alt="" aria-hidden="true" />
+              <img class="logo-mark" src="/assets/logo-mark.png" width="36" height="40" alt="" aria-hidden="true" />
               <span class="brand-name">Urban Procures</span>
             </div>
             <span class="muted" style="font-size:.8rem">Dubai, UAE</span>
@@ -225,7 +222,7 @@
           </nav>
           <nav class="footer-col">
             <strong>Legal</strong>
-            <button onclick="navigateTo('terms-client')">Contractor terms</button>
+            <button onclick="navigateTo('terms-client')">Client terms</button>
             <button onclick="navigateTo('terms-vendor')">Vendor terms</button>
             <button onclick="navigateTo('privacy')">Privacy</button>
           </nav>
@@ -241,5 +238,6 @@
     }
     window.navigateTo = navigateTo;
   </script>
+  <script type="module" src="/js/app.js"></script>
 </body>
 </html>

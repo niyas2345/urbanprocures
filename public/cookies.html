@@ -4,21 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cookies | Urban Procures</title>
-  <script type="module" src="https://urbanprocures.com/.webmcp/bridge.js" data-packs="mcp-server-client"></script><link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="icon" type="image/png" href="/assets/favicon-ITXu3E6w.png" />
-  <link rel="apple-touch-icon" href="/assets/apple-touch-icon-DOl7dlNF.png" /><script src="/js/routes.js"></script>  <script type="module" crossorigin src="/assets/modulepreload-polyfill-B5Qt9EMX.js"></script>
-  <script type="module" crossorigin src="/assets/app-YH1q-tUa.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/styles--ep9HACF.css">
-  <link rel="stylesheet" crossorigin href="/assets/platform-BZjLUEVG.css">
-<style id="prod-harden">[data-reset],[data-owner-unlock]{display:none!important}</style>  <link rel="stylesheet" href="/assets/live-theme-fix.css">
-</head>
+  <link rel="icon" type="image/png" href="/assets/favicon.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/css/styles.css" />
+<link rel="stylesheet" href="/css/platform.css" /><script src="/js/routes.js"></script></head>
 <body data-page="cookies.html">
   <div class="app" id="app">
     <aside class="sidebar" id="sidebar">
       <div class="brand">
-        <img class="logo-mark" src="/assets/logo-mark-CxtG8hpI.png" width="36" height="40" alt="" aria-hidden="true" />
+        <img class="logo-mark" src="/assets/logo-mark.png" width="36" height="40" alt="" aria-hidden="true" />
         <span class="brand-name">Urban Procures</span>
       </div>
       <nav class="nav">
@@ -28,7 +25,7 @@
         <button type="button" onclick="navigateTo('public-rfq')">Get Quotes</button>
         <button type="button" onclick="navigateTo('vendors')">Vendors</button>
         <span class="lab">Legal</span>
-        <button type="button" onclick="navigateTo('terms-client')">Contractor Terms</button>
+        <button type="button" onclick="navigateTo('terms-client')">Client Terms</button>
         <button type="button" onclick="navigateTo('terms-vendor')">Vendor Terms</button>
         <button type="button" onclick="navigateTo('privacy')">Privacy</button>
         <button type="button" class="active">Cookies</button>
@@ -62,7 +59,7 @@
             <p><strong>4. HOW TO CLEAR</strong></p>
             <p>Use your browser settings to delete cookies and site data for urbanprocures.com. You will need to sign in again.</p>
             <p><strong>5. CONTACT</strong></p>
-            <p>Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a2d7d0c0c3ccd2d0cdc1d7d0c7d1e2c5cfc3cbce8cc1cdcf">[email&#160;protected]</a><br>WhatsApp: +971 50 733 5567</p>
+            <p>Email: urbanprocures@gmail.com<br>WhatsApp: +971 50 733 5567</p>
           </div>
         </div>
       </div>
@@ -70,14 +67,14 @@
         <div class="footer-grid">
           <div class="footer-brand">
             <div class="brand">
-              <img class="logo-mark" src="/assets/logo-mark-CxtG8hpI.png" width="36" height="40" alt="" aria-hidden="true" />
+              <img class="logo-mark" src="/assets/logo-mark.png" width="36" height="40" alt="" aria-hidden="true" />
               <span class="brand-name">Urban Procures</span>
             </div>
             <span class="muted" style="font-size:.8rem">Dubai, UAE</span>
           </div>
           <nav class="footer-col">
             <strong>Legal</strong>
-            <button type="button" onclick="navigateTo('terms-client')">Contractor terms</button>
+            <button type="button" onclick="navigateTo('terms-client')">Client terms</button>
             <button type="button" onclick="navigateTo('terms-vendor')">Vendor terms</button>
             <button type="button" onclick="navigateTo('privacy')">Privacy</button>
             <button type="button" onclick="navigateTo('cookies')">Cookies</button>
@@ -92,12 +89,13 @@
       </footer>
     </section>
   </div>
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script>
     function navigateTo(page) {
       var name = !page || page === 'home' ? 'index' : String(page).replace(/\.html$/i, '');
       window.location.href = window.urbanRoute(name);
     }
     window.navigateTo = navigateTo;
   </script>
+  <script type="module" src="/js/app.js"></script>
 </body>
 </html>

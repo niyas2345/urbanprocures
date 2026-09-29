@@ -1,0 +1,1 @@
+fetch('/api/native/public/stats').then(r=>r.ok?r.json():null).then(stats=>{if(!stats)return;for(const [id,key] of Object.entries({regCount:'companies',vendorCount:'vendors',pulseOpen:'open_rfqs',awardCount:'awards'})){const el=document.getElementById(id);if(el)el.textContent=Number(stats[key]||0).toLocaleString('en-AE')}}).catch(()=>{});

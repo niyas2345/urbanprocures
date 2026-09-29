@@ -2,24 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#102b3b">
-  <script type="module" src="https://urbanprocures.com/.webmcp/bridge.js" data-packs="mcp-server-client"></script><link rel="icon" href="/assets/favicon-ITXu3E6w.png"><script src="/js/routes.js"></script>
+  <link rel="icon" href="/assets/favicon.png"><link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/platform.css"><script src="/js/routes.js"></script>
   <title>Admin login | Urban Procures</title>
-  <script type="module" crossorigin src="/assets/modulepreload-polyfill-B5Qt9EMX.js"></script>
-  <script type="module" crossorigin src="/assets/native-auth-C5tv2gpy.js?v=auth-20260928"></script>
-  <link rel="stylesheet" crossorigin href="/assets/styles--ep9HACF.css">
-  <link rel="stylesheet" crossorigin href="/assets/platform-BZjLUEVG.css">
-<style id="prod-harden">[data-reset],[data-owner-unlock]{display:none!important}</style>  <link rel="stylesheet" href="/assets/live-theme-fix.css">
 </head>
 <body data-page="admin-login.html">
   <div class="auth-layout">
     <aside class="auth-rail">
-      <a class="brand brand-light" href="/"><img src="/assets/logo-mark-CxtG8hpI.png" width="38" height="42" alt=""><span>URBAN <b>PROCURES</b></span></a>
+      <a class="brand brand-light" href="/"><img src="/assets/logo-mark.png" width="38" height="42" alt=""><span>URBAN <b>PROCURES</b></span></a>
       <div class="auth-rail-copy"><p class="eyebrow">OPERATIONS DESK</p><h2>Review, approve<br>and release work.</h2><p>Admin access for account verification, public RFQ review, site visits, vendor invitations and awards oversight.</p></div>
-      <div class="rail-note"><span>↗</span><p>Contractor and vendor identities stay protected while operations reviews the work pack.</p></div>
+      <div class="rail-note"><span>↗</span><p>Client and vendor identities stay protected while operations reviews the work pack.</p></div>
       <small>Urban Procures · Admin</small>
     </aside>
     <main class="auth-main">
-      <nav class="auth-nav" aria-label="Admin navigation"><a href="/">Home</a><a href="/signin">Contractor/Vendor sign in</a><span>Admin only</span></nav>
+      <nav class="auth-nav" aria-label="Admin navigation"><a href="/">Home</a><a href="/signin">Client/Vendor sign in</a><span>Admin only</span></nav>
       <div class="auth-content">
         <header class="auth-title"><p class="eyebrow">ADMIN PORTAL</p><h1>Operations login.</h1><p>Open the admin desk to verify accounts, approve vendors, publish RFQs and manage site visits.</p></header>
         <section class="auth-card">
@@ -39,10 +34,11 @@
             </form>
           </div>
         </section>
-        <p class="auth-bottom">Contractor or vendor? <a href="/signin">Use the workspace sign-in</a>.</p>
+        <p class="auth-bottom">Client or vendor? <a href="/signin">Use the workspace sign-in</a>.</p>
       </div>
       <footer class="auth-footer"><a href="/privacy">Privacy</a><a href="/terms/client">Terms</a><span>© Urban Procures</span></footer>
     </main>
   </div>
+  <script type="module" src="/js/native-auth.js"></script>
 </body>
 </html>
