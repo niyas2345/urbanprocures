@@ -109,15 +109,6 @@ const requireSession = async (request, env) => {
 };
 
 async function handleAuth(path, request, env) {
-  if (path === "auth/register" && request.method === "POST") {
-    const body = await parseJson(request);
-    const email = String(body.email || "").trim().toLowerCase();
-    const role = String(body.role || roleForEmail(email));
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Enter a valid email address." }, 400);
-    if (!String(body.password || "")) return json({ error: "Enter your password." }, 400);
-    return json({ ok: true, emailSent: false, role });
-  }
-
   if (path === "auth/login" && request.method === "POST") {
     const body = await parseJson(request);
     const email = String(body.email || "").trim().toLowerCase();
