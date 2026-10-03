@@ -23,6 +23,12 @@ async function load(){
     content.append(card);
   }
   if(!request.quotations.length)content.append(text('p','No quotations have been submitted yet. Reopen your email link to check later.'));
+  for(const document of request.documents||[]){const button=text('button','Open reviewed '+(document.kind==='quotation'?'quotation':'work pack'));button.className='btn';button.onclick=async()=>{button.disabled=true;try{const response=await fetch(document.url,{credentials:'omit',headers:{'X-Owner-Token':token}});if(!response.ok)throw Error('Document could not be opened. Please retry.');const url=URL.createObjectURL(await response.blob());const a=window.document.createElement('a');a.href=url;a.download='reviewed-work-pack.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch(error){message.textContent=error.message}finally{button.disabled=false}};content.append(button)}
+  const messages=await api('/clarifications');
+  const thread=window.document.createElement('section');thread.className='auth-card';thread.append(text('h2','Clarifications'));
+  for(const item of messages.clarifications)thread.append(text('p',item.sender+' · '+item.sanitized_message));
+  if(request.status==='quoting'){const form=window.document.createElement('form');const label=text('label','Clarification (no names or contacts)');const input=window.document.createElement('textarea');input.required=true;input.maxLength=10000;label.append(input);const button=text('button','Send clarification');button.className='btn';form.append(label,button);form.onsubmit=async event=>{event.preventDefault();button.disabled=true;try{await api('/clarifications',{message:input.value});await load()}catch(error){message.textContent=error.message;button.disabled=false}};thread.append(form)}
+  content.append(thread);
 }
 if(!rfq||!token)message.textContent='Open the access link sent to your email. Contact Urban Procures if the link has expired.';
 else load().catch(error=>message.textContent=error.message);

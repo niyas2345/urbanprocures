@@ -15,6 +15,7 @@ function sessionDatabase(tokenHash) {
             return sessions.has(hash) ? { id: 'client-1', email: 'client@example.test', role: 'client', verified_at: '2026-01-01' } : null;
           },
           async run() {
+            if(sql.startsWith('INSERT INTO audit_log'))return {meta:{changes:1}};
             assert.match(sql, /^DELETE FROM sessions WHERE token_hash=/);
             return { meta: { changes: Number(sessions.delete(hash)) } };
           }

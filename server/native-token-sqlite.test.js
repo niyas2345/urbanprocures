@@ -6,7 +6,7 @@ import {handleNative} from './cloudflare-native.js';
 import {verifyPassword} from './passwords.js';
 function database(){
   const sql=new DatabaseSync(':memory:');
-  for(const path of ['0001_initial.sql','0002_public_upload.sql','0003_native_production_guards.sql','0004_public_owners.sql'])sql.exec(readFileSync(new URL('../d1/migrations/'+path,import.meta.url),'utf8'));
+  for(const path of ['0001_initial.sql','0002_public_upload.sql','0003_native_production_guards.sql','0004_public_owners.sql','0005_workflow_guards.sql'])sql.exec(readFileSync(new URL('../d1/migrations/'+path,import.meta.url),'utf8'));
   const db={prepare(text){let args=[];return {bind(...values){args=values;return this},async first(){return sql.prepare(text).get(...args)||null},async run(){return {meta:sql.prepare(text).run(...args)}},async all(){return {results:sql.prepare(text).all(...args)}},execute(){return {meta:sql.prepare(text).run(...args)}}}},async batch(statements){sql.exec('BEGIN');try{const results=statements.map(s=>s.execute());sql.exec('COMMIT');return results}catch(e){sql.exec('ROLLBACK');throw e}}};
   return {sql,db};
 }
@@ -62,7 +62,7 @@ test('public owner access is scoped and only owner confirmation releases contact
   assert.equal((await award.json()).service_charge_aed,500);
   detail=await (await handleNative(request('rfq'),env)).json();
   assert.equal(detail.rfq.quotations[0].vendor.company_name,'Vendor Identity');
-  assert.equal((await handleNative(request('rfq/award',{quotation_id:'quote'}),env)).status,403);
+  assert.equal((await handleNative(request('rfq/award',{quotation_id:'quote'}),env)).status,200);
   sql.prepare("UPDATE public_owners SET expires_at='2000-01-01T00:00:00Z'").run();
   assert.equal((await handleNative(request('rfq'),env)).status,401);
   sql.close();

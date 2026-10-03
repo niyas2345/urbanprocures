@@ -9,7 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/png" href="/assets/favicon.png" />
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <script src="/js/turnstile-config.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&amp;onload=urbanTurnstileReady" async defer></script>
   <link rel="stylesheet" href="/css/styles.css" />
 <link rel="stylesheet" href="/css/platform.css" /><script src="/js/routes.js"></script></head>
 <body data-page="/rfq/new">
@@ -196,7 +197,7 @@
               </div>
             </div>
 
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAAFD42QgkC2tOQXoA" data-theme="light"></div>
+            <div class="cf-turnstile"></div>
             <!-- Documents (Optional for public) -->
             <div class="form-section">
               <h3>Documents (Optional)</h3>

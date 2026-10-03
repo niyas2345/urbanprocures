@@ -16,9 +16,11 @@ const staticAssets = collectStaticAssets(distDir);
 mkdirSync(dirname(serverEntry), { recursive: true });
 mkdirSync(dirname(hostingConfig), { recursive: true });
 cpSync(resolve(root, "server"), resolve(root, "dist/server"), { recursive: true });
+const release=JSON.parse(readFileSync(resolve(distDir,'build-stamp.json'),'utf8')).commit;
+writeFileSync(resolve(distDir,'server/release.js'),'export const RELEASE_COMMIT='+JSON.stringify(release||'development')+';\n');
 writeFileSync(
   serverEntry,
-  readFileSync(resolve(root, "server/sites-worker.js"), "utf8")
+  readFileSync(resolve(root, "server/cloudflare-entry.js"), "utf8")
     .replace(
       "const STATIC_ASSETS = {};",
       () => `const STATIC_ASSETS = ${JSON.stringify(staticAssets)};`

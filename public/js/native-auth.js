@@ -2,6 +2,8 @@ const api=async(path,body)=>{const r=await fetch('/api/native/'+path,{method:'PO
 const message=(id,text,ok=false)=>{const p=document.getElementById(id);if(p){p.hidden=false;p.textContent=text;p.className='form-msg '+(ok?'ok':'error')}};
 const val=(form,name)=>{const value=form.elements[name]?.value||'';return /password/i.test(name)?value:value.trim()};
 const route=role=>location.assign(role==='admin'?'/admin/dashboard':`/${role}/dashboard`);
+const vendorTerms=fetch('/api/native/public/terms/vendor').then(async r=>{if(!r.ok)throw Error('Vendor Terms could not be loaded. Please refresh and retry.');return r.json()});
+vendorTerms.catch(()=>{});
 const login=async(form,msgId,{adminOnly=false}={})=>{
   const button=form.querySelector('[type=submit]');button.disabled=true;
   try{
@@ -16,8 +18,8 @@ if(document.body.dataset.page==='signup.html')for(const role of ['client','vendo
     const confirm=val(form,prefix?'vConfirmPassword':'confirmPassword');
     if(password!==confirm)return message(role+'FormMsg','Passwords do not match.');
     const button=form.querySelector('[type=submit]');button.disabled=true;
-    try{const result=await api('auth/register',{role,email:val(form,prefix?'vEmail':'email'),password,company_name:val(form,prefix?'vCompanyName':'companyName'),contact_name:val(form,prefix?'vContactPerson':'contactPerson'),phone:val(form,prefix?'vPhone':'phone'),trade_license_no:val(form,'tradeLicenseNumber'),license_expiry:val(form,'tradeLicenseExpiry'),categories:[...form.querySelectorAll('[name=categories]:checked')].map(x=>x.value),emirate:val(form,'emirate'),accept_vendor_terms:role==='vendor'&&form.elements.clickwrapAccept.checked});
-      form.reset();message(role+'FormMsg',result.emailSent?'Account created. Check your email to verify it before signing in.':'Account created. Email verification is pending while Zoho is connected; the Urban Procures team can verify your account manually.',true);
+    try{const terms=role==='vendor'?await vendorTerms:null;const result=await api('auth/register',{role,email:val(form,prefix?'vEmail':'email'),password,company_name:val(form,prefix?'vCompanyName':'companyName'),contact_name:val(form,prefix?'vContactPerson':'contactPerson'),phone:val(form,prefix?'vPhone':'phone'),trade_license_no:val(form,'tradeLicenseNumber'),license_expiry:val(form,'tradeLicenseExpiry'),categories:[...form.querySelectorAll('[name=categories]:checked')].map(x=>x.value),emirate:val(form,'emirate'),accept_vendor_terms:role==='vendor'&&form.elements.clickwrapAccept.checked,...(terms?{terms_version:terms.version,terms_hash:terms.agreement_hash}:{})});
+      form.reset();message(role+'FormMsg',result.emailSent?'Account created. Check your email to verify it before signing in.':'Account created. Your verification email is queued. Check your inbox shortly or use forgot password to request a fresh mailbox link.',true);
     }catch(err){message(role+'FormMsg',err.message)}finally{button.disabled=false}
   });
 }

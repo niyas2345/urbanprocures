@@ -23,7 +23,9 @@
   "vars": {
     "PLATFORM_BILLING_MODE": "free",
     "SUPABASE_URL": "https://vdlrwekoyvvspxuyzgrx.supabase.co",
-    "SUPABASE_ANON_KEY": "sb_publishable_0a8D88dOZPmHe_PHLCnBcg_2h6P7U6u"
+    "SUPABASE_ANON_KEY": "sb_publishable_0a8D88dOZPmHe_PHLCnBcg_2h6P7U6u",
+    "APP_ENV": "production",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFD42QgkC2tOQXoA"
   },
   "env": {
     "preview": {
@@ -45,7 +47,10 @@
         }
       ],
       "vars": {
-        "PLATFORM_BILLING_MODE": "free"
+        "PLATFORM_BILLING_MODE": "free",
+        "APP_ENV": "preview",
+        "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+        "NODE_VERSION": "22.20.0"
       }
     }
   }

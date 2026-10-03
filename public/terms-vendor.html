@@ -225,19 +225,8 @@
     function acceptTerms() {
       if (!checkbox.checked) return;
       
-      // Store acceptance in localStorage
-      const acceptance = {
-        userId: null, // Will be set when connected to Supabase
-        termsVersion: '1.0',
-        acceptedAt: new Date().toISOString(),
-        ipAddress: null, // Will be captured server-side
-        userAgent: navigator.userAgent
-      };
-      
-      localStorage.setItem('vendorTermsAccepted', JSON.stringify(acceptance));
-      
-      alert('Terms accepted!\n\nYou can now register as a vendor.');
-      window.location.href = '/signup';
+      // The current version is accepted and recorded server-side at registration.
+      window.location.href = '/signup#vendor';
     }
   </script>
 </body>
