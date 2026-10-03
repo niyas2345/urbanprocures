@@ -63,7 +63,7 @@ const classicScripts = join(dist, "js");
 mkdirSync(classicScripts, { recursive: true });
 const publicJs = join(root, "public/js");
 for (const name of readdirSync(publicJs)) {
-  if (name.endsWith(".js")) copyFileSync(join(publicJs, name), join(classicScripts, name));
+  if (name.endsWith(".js") && !['live-app.js','dashboard.js','terms-clickwrap.js'].includes(name)) copyFileSync(join(publicJs, name), join(classicScripts, name));
 }
 mkdirSync(join(dist, "css"), { recursive: true });
 copyIfExists(join(root, "public/css/styles.css"), join(dist, "css/styles.css"));
@@ -87,5 +87,6 @@ if (process.env.PREVIEW_ONLY === "1") {
 }
 writeFileSync(join(dist, "build-stamp.json"), JSON.stringify({
   stamp: BUILD_STAMP,
+  commit: process.env.CF_PAGES_COMMIT_SHA || spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).stdout?.trim() || null,
   builtAt: new Date().toISOString()
 }, null, 2));

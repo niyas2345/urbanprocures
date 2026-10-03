@@ -23,6 +23,35 @@
   "vars": {
     "PLATFORM_BILLING_MODE": "free",
     "SUPABASE_URL": "https://vdlrwekoyvvspxuyzgrx.supabase.co",
-    "SUPABASE_ANON_KEY": "sb_publishable_0a8D88dOZPmHe_PHLCnBcg_2h6P7U6u"
+    "SUPABASE_ANON_KEY": "sb_publishable_0a8D88dOZPmHe_PHLCnBcg_2h6P7U6u",
+    "APP_ENV": "production",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFD42QgkC2tOQXoA"
+  },
+  "env": {
+    "preview": {
+      "d1_databases": [
+        {
+          "binding": "URBAN_PROCURE_DB",
+          "database_name": "urban-procure-audit-preview",
+          "database_id": "cc56fc57-e3cf-43cf-831d-7820c9ca15ae"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "URBAN_PROCURE_RFQ_DOCUMENTS",
+          "bucket_name": "urban-procure-preview-rfq-documents"
+        },
+        {
+          "binding": "URBAN_PROCURE_QUOTE_DOCUMENTS",
+          "bucket_name": "urban-procure-preview-quote-documents"
+        }
+      ],
+      "vars": {
+        "PLATFORM_BILLING_MODE": "free",
+        "APP_ENV": "preview",
+        "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+        "NODE_VERSION": "22.20.0"
+      }
+    }
   }
 }

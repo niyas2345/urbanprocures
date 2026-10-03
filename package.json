@@ -5,7 +5,7 @@
   "description": "URBAN PROCURE RFQ marketplace interface for clients, vendors, and platform owners",
   "type": "module",
   "engines": {
-    "node": ">=18"
+    "node": ">=22.20.0"
   },
   "scripts": {
     "dev": "vite",
@@ -16,7 +16,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0"
+    "@noble/hashes": "^2.4.0"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",
