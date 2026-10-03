@@ -1,6 +1,6 @@
 const api=async(path,body)=>{const r=await fetch('/api/native/'+path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const v=await r.json();if(!r.ok)throw Error(v.error||'Request failed');return v};
 const message=(id,text,ok=false)=>{const p=document.getElementById(id);if(p){p.hidden=false;p.textContent=text;p.className='form-msg '+(ok?'ok':'error')}};
-const val=(form,name)=>form.elements[name]?.value?.trim()||'';
+const val=(form,name)=>{const value=form.elements[name]?.value||'';return /password/i.test(name)?value:value.trim()};
 const route=role=>location.assign(role==='admin'?'/admin/dashboard':`/${role}/dashboard`);
 const login=async(form,msgId,{adminOnly=false}={})=>{
   const button=form.querySelector('[type=submit]');button.disabled=true;
