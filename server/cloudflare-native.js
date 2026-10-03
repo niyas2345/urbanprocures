@@ -1,6 +1,7 @@
 import { calculateVendorServiceCharge } from './commercial/service-fee.js';
 import { scanIdentityLeakage } from './ai/identity-scan.js';
 import { queueEmail, processEmailJobs } from './mail-outbox.js';
+import { ZohoEmailProvider } from './ai/outreach-provider.js';
 import { passwordHash, verifyPassword, equalHash } from './passwords.js';
 
 const json = (data, status=200) => new Response(JSON.stringify(data), {status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
@@ -23,7 +24,17 @@ async function actor(request,env) {
 }
 function requireRole(user,roles) {if(!user)return bad('Authentication required',401);if(!roles.includes(user.role))return bad('Access denied',403);return null;}
 async function audit(db,user,kind,entity,event,detail={}) {await db.prepare('INSERT INTO audit_log(id,actor_user_id,entity_kind,entity_id,event,detail) VALUES(?,?,?,?,?,?)').bind(id(),user?.id||null,kind,entity,event,JSON.stringify(detail)).run();}
-async function email(env,to,kind,subject,body) {return queueEmail(env,to,kind,subject,body);}
+async function email(env,to,kind,subject,body) {
+  // Outreach is quota reserved and confirmed synchronously; automatic retries
+  // must not deliver after a prospect opts out or after its reservation is released.
+  if(kind==='invitation'){
+    const provider=new ZohoEmailProvider({env});
+    const result=await provider.sendEmail({to,subject,body});
+    await env.URBAN_PROCURE_DB.prepare('INSERT INTO email_log(id,recipient,kind,status,provider_id,error_code) VALUES(?,?,?,?,?,?)').bind(id(),to,kind,result.success?'sent':'failed',result.messageId||null,result.success?null:'provider_failure').run();
+    return result;
+  }
+  return queueEmail(env,to,kind,subject,body);
+}
 function directMailConfigured(env) {
   return Boolean(env.ZOHO_CLIENT_ID&&env.ZOHO_CLIENT_SECRET&&env.ZOHO_REFRESH_TOKEN&&env.ZOHO_ACCOUNT_ID);
 }

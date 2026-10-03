@@ -38,6 +38,12 @@ async function sendJob(env,id){
 }
 export async function processEmailJobs(env){
   const rows=await env.URBAN_PROCURE_DB.prepare("SELECT id FROM jobs WHERE kind='transactional_email' AND status IN ('queued','sending') AND next_at<=? ORDER BY next_at LIMIT 20").bind(new Date().toISOString()).all();
-  let sent=0;for(const row of rows.results)if((await sendJob(env,row.id)).success)sent++;
-  return {processed:rows.results.length,sent};
+  const deadline=Date.now()+25000;
+  let sent=0,processed=0;
+  for(const row of rows.results){
+    if(Date.now()>=deadline)break;
+    if((await sendJob(env,row.id)).success)sent++;
+    processed++;
+  }
+  return {processed,sent};
 }
