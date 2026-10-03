@@ -5,7 +5,7 @@
   "description": "URBAN PROCURE RFQ marketplace interface for clients, vendors, and platform owners",
   "type": "module",
   "engines": {
-    "node": ">=18"
+    "node": ">=22.20.0"
   },
   "scripts": {
     "dev": "vite",
