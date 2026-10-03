@@ -332,7 +332,6 @@ export class ZohoEmailProvider {
       ZOHO_DC: env.ZOHO_DC,
       ZOHO_FROM_EMAIL: env.ZOHO_FROM_EMAIL
     };
-    if (!fromEnv.ZOHO_REFRESH_TOKEN) Object.assign(fromEnv, await loadIntegrationSecrets(env));
     const dc = fromEnv.ZOHO_DC || 'com';
     const [accountsBase, mailBase] = ZOHO_HOSTS[dc] || ZOHO_HOSTS.com;
     this.cached = {
@@ -380,6 +379,7 @@ export class ZohoEmailProvider {
     }
     const address = recipientEmail(to);
     if (!address) return { success: false, reason: 'Missing recipient email' };
+    if(this.env.APP_ENV==='preview'&&!String(this.env.PREVIEW_EMAIL_ALLOWLIST||'').toLowerCase().split(',').map(x=>x.trim()).includes(address.toLowerCase()))return {success:false,reason:'Preview recipient is not allowlisted'};
     try {
       const access = await this.token(config);
       const response = await fetch(`${config.mailBase}/api/accounts/${config.accountId}/messages`, {
@@ -416,17 +416,6 @@ function recipientEmail(to) {
   return String(to.email || to.mailId || '').trim();
 }
 
-async function loadIntegrationSecrets(env) {
-  const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SECRET_KEY || env.Supabase_Secret_Key || '';
-  if (!env.SUPABASE_URL || !key) return {};
-  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/integration_secrets?select=id,value`, {
-    headers: { apikey: key, Authorization: `Bearer ${key}` }
-  });
-  if (!response.ok) return {};
-  const rows = await response.json();
-  return Object.fromEntries((Array.isArray(rows) ? rows : []).map((row) => [row.id, row.value]));
-}
-
 // Factory to create outreach provider with configured channels
 export function createOutreachProvider(env = {}) {
   const provider = new OutreachProvider({
@@ -436,7 +425,7 @@ export function createOutreachProvider(env = {}) {
   });
 
   const zoho = new ZohoEmailProvider({ env, timeoutMs: parseInt(env.OUTREACH_TIMEOUT_MS || '10000', 10) });
-  if (env.ZOHO_REFRESH_TOKEN || env.SUPABASE_URL) {
+  if (env.ZOHO_REFRESH_TOKEN) {
     provider.registerProvider('email', zoho);
   } else if (env.EMAIL_API_BASE && env.EMAIL_API_KEY) {
     provider.registerProvider('email', new HttpEmailProvider({

@@ -8,7 +8,7 @@ async function key(env){
 }
 async function seal(env,value){const iv=crypto.getRandomValues(new Uint8Array(12));return JSON.stringify({iv:b64(iv),data:b64(await crypto.subtle.encrypt({name:'AES-GCM',iv},await key(env),encode.encode(JSON.stringify(value))))});}
 async function open(env,payload){const value=JSON.parse(payload);return JSON.parse(decode.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(value.iv)},await key(env),bytes(value.data))));}
-const provider=env=>new ZohoEmailProvider({env:{ZOHO_CLIENT_ID:env.ZOHO_CLIENT_ID,ZOHO_CLIENT_SECRET:env.ZOHO_CLIENT_SECRET,ZOHO_REFRESH_TOKEN:env.ZOHO_REFRESH_TOKEN,ZOHO_ACCOUNT_ID:env.ZOHO_ACCOUNT_ID,ZOHO_DC:env.ZOHO_DC,ZOHO_FROM_EMAIL:env.ZOHO_FROM_EMAIL}});
+const provider=env=>new ZohoEmailProvider({env:{APP_ENV:env.APP_ENV,PREVIEW_EMAIL_ALLOWLIST:env.PREVIEW_EMAIL_ALLOWLIST,ZOHO_CLIENT_ID:env.ZOHO_CLIENT_ID,ZOHO_CLIENT_SECRET:env.ZOHO_CLIENT_SECRET,ZOHO_REFRESH_TOKEN:env.ZOHO_REFRESH_TOKEN,ZOHO_ACCOUNT_ID:env.ZOHO_ACCOUNT_ID,ZOHO_DC:env.ZOHO_DC,ZOHO_FROM_EMAIL:env.ZOHO_FROM_EMAIL}});
 export async function queueEmail(env,to,kind,subject,body){
   const id=crypto.randomUUID(),now=new Date().toISOString();
   const ttl=kind==='password_reset'?3600000:kind==='verification'?86400000:7*86400000;
