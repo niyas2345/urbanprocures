@@ -10,15 +10,14 @@ const clean = (value,max=1000) => String(value??'').trim().slice(0,max);
 const sha = async value => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))).map(x=>x.toString(16).padStart(2,'0')).join('');
 const b64 = bytes => btoa(String.fromCharCode(...bytes));
 const random = () => b64(crypto.getRandomValues(new Uint8Array(32))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
+const sessionToken = request => request.headers.get('Cookie')?.match(/(?:^|;\s*)up_session=([^;]+)/)?.[1] || request.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
 
 async function passwordHash(password,salt) {
   const input=`urban-procures-native-v1:${salt}:${password}`;
   return sha(input);
 }
 async function actor(request,env) {
-  const cookie=request.headers.get('Cookie')?.match(/(?:^|;\s*)up_session=([^;]+)/)?.[1];
-  const bearer=request.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
-  const token=cookie||bearer;
+  const token=sessionToken(request);
   if(!token)return null;
   const row=await env.URBAN_PROCURE_DB.prepare('SELECT u.id,u.email,u.role,u.verified_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?').bind(await sha(token),now()).first();
   return row||null;
@@ -64,7 +63,7 @@ async function handle(request,env) {
   // Browser cookie sessions must not authorize cross-origin state changes.
   if(!['GET','HEAD','OPTIONS'].includes(method)&&request.headers.has('Cookie')) {
     const origin=request.headers.get('Origin');
-    if(origin&&origin!==new URL(request.url).origin)return bad('Cross-origin request denied',403);
+    if(request.headers.get('Sec-Fetch-Site')==='cross-site'||origin&&origin!==new URL(request.url).origin)return bad('Cross-origin request denied',403);
   }
   const user=await actor(request,env);
   if(path==='/api/native/documents'&&method==='POST') {
@@ -125,7 +124,7 @@ async function handle(request,env) {
     return sessionResponse(row,await issueSession(db,row));
   }
   if(path==='/api/native/auth/logout'&&method==='POST') {
-    const token=request.headers.get('Cookie')?.match(/up_session=([^;]+)/)?.[1];if(token)await db.prepare('DELETE FROM sessions WHERE token_hash=?').bind(await sha(token)).run();
+    const token=sessionToken(request);if(token)await db.prepare('DELETE FROM sessions WHERE token_hash=?').bind(await sha(token)).run();
     const out=json({ok:true});out.headers.set('Set-Cookie','up_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');return out;
   }
   if(path==='/api/native/auth/reset/request'&&method==='POST') {
