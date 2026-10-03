@@ -1,7 +1,7 @@
 /** Canonical public routes. Keep these independent of the Pages asset lookup. */
 export const PAGE_ROUTES = Object.freeze({
   '/': '/index.html', '/signup': '/signup.html', '/signin': '/signin.html', '/admin/login': '/admin-login.html', '/admin-login': '/admin-login.html',
-  '/reset-password': '/reset-password.html', '/verify-email': '/verify-email.html',
+  '/public-request': '/public-owner.html', '/reset-password': '/reset-password.html', '/verify-email': '/verify-email.html',
   '/client/dashboard': '/dashboard-client.html', '/client/projects': '/dashboard-client.html',
   '/client/rfqs': '/dashboard-client.html', '/client/quotations': '/dashboard-client.html',
   '/client/messages': '/dashboard-client.html', '/client/settings': '/dashboard-client.html',

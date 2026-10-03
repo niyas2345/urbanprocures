@@ -1,7 +1,7 @@
 import { calculateVendorServiceCharge } from './commercial/service-fee.js';
-import { ZohoEmailProvider } from './ai/outreach-provider.js';
 import { scanIdentityLeakage } from './ai/identity-scan.js';
-import { passwordHash, verifyPassword } from './passwords.js';
+import { queueEmail, processEmailJobs } from './mail-outbox.js';
+import { passwordHash, verifyPassword, equalHash } from './passwords.js';
 
 const json = (data, status=200) => new Response(JSON.stringify(data), {status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
 const bad = (message,status=400) => json({ok:false,error:message},status);
@@ -14,6 +14,8 @@ const random = () => b64(crypto.getRandomValues(new Uint8Array(32))).replaceAll(
 const sessionToken = request => request.headers.get('Cookie')?.match(/(?:^|;\s*)up_session=([^;]+)/)?.[1] || request.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
 
 async function actor(request,env) {
+  const ownerToken=request.headers.get('X-Owner-Token');
+  if(ownerToken){const owner=await env.URBAN_PROCURE_DB.prepare('SELECT p.request_id,p.user_id AS id,u.email FROM public_owners p JOIN users u ON u.id=p.user_id WHERE p.token_hash=? AND p.expires_at>?').bind(await sha(ownerToken),now()).first();return owner?{...owner,role:'public_owner',public_request_id:owner.request_id}:null;}
   const token=sessionToken(request);
   if(!token)return null;
   const row=await env.URBAN_PROCURE_DB.prepare('SELECT u.id,u.email,u.role,u.verified_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?').bind(await sha(token),now()).first();
@@ -21,14 +23,7 @@ async function actor(request,env) {
 }
 function requireRole(user,roles) {if(!user)return bad('Authentication required',401);if(!roles.includes(user.role))return bad('Access denied',403);return null;}
 async function audit(db,user,kind,entity,event,detail={}) {await db.prepare('INSERT INTO audit_log(id,actor_user_id,entity_kind,entity_id,event,detail) VALUES(?,?,?,?,?,?)').bind(id(),user?.id||null,kind,entity,event,JSON.stringify(detail)).run();}
-async function email(env,to,kind,subject,body) {
-  // An outbound provider must be explicitly configured; no simulated delivery.
-  const provider=new ZohoEmailProvider({env:{ZOHO_CLIENT_ID:env.ZOHO_CLIENT_ID,ZOHO_CLIENT_SECRET:env.ZOHO_CLIENT_SECRET,ZOHO_REFRESH_TOKEN:env.ZOHO_REFRESH_TOKEN,ZOHO_ACCOUNT_ID:env.ZOHO_ACCOUNT_ID,ZOHO_DC:env.ZOHO_DC,ZOHO_FROM_EMAIL:env.ZOHO_FROM_EMAIL}}); const event=id();
-  let result={success:false,reason:'Zoho is not configured'};
-  if(await provider.ready())result=await provider.sendEmail({to,subject,body});
-  await env.URBAN_PROCURE_DB.prepare('INSERT INTO email_log(id,recipient,kind,status,provider_id,error_code) VALUES(?,?,?,?,?,?)').bind(event,to,kind,result.success?'sent':'pending_provider',result.messageId||null,result.success?null:clean(result.reason,100)).run();
-  return result;
-}
+async function email(env,to,kind,subject,body) {return queueEmail(env,to,kind,subject,body);}
 function directMailConfigured(env) {
   return Boolean(env.ZOHO_CLIENT_ID&&env.ZOHO_CLIENT_SECRET&&env.ZOHO_REFRESH_TOKEN&&env.ZOHO_ACCOUNT_ID);
 }
@@ -55,6 +50,15 @@ async function limitAttempts(db,request,env,purpose,maximum) {
   const update=await db.prepare('UPDATE public_rate_limits SET attempts=attempts+1 WHERE client_hash=? AND hour=? AND attempts<?').bind(hash,hour,maximum).run();
   return Boolean(update.meta.changes);
 }
+async function sendOwnerLink(request,env,rfq) {
+  const owner=await env.URBAN_PROCURE_DB.prepare('SELECT id,email FROM public_requests WHERE id=?').bind(rfq.public_request_id).first();
+  const address=owner.email.toLowerCase(),salt=random(),uid=id();
+  await env.URBAN_PROCURE_DB.prepare('INSERT OR IGNORE INTO users(id,email,password_hash,password_salt,role) VALUES(?,?,?,?,?)').bind(uid,address,await passwordHash(random(),salt),salt,'client').run();
+  const account=await env.URBAN_PROCURE_DB.prepare('SELECT id FROM users WHERE email=?').bind(address).first();
+  const token=random();
+  await env.URBAN_PROCURE_DB.prepare('INSERT INTO public_owners(request_id,user_id,token_hash,expires_at) VALUES(?,?,?,?) ON CONFLICT(request_id) DO UPDATE SET token_hash=excluded.token_hash,expires_at=excluded.expires_at').bind(owner.id,account.id,await sha(token),new Date(Date.now()+7*86400000).toISOString()).run();
+  return email(env,address,'owner_access','Review your Urban Procures quotations',`${new URL(request.url).origin}/public-request#rfq=${encodeURIComponent(rfq.id)}&token=${encodeURIComponent(token)}`);
+}
 async function handle(request,env) {
   const db=env.URBAN_PROCURE_DB;if(!db)return bad('Database unavailable',503);
   const path=new URL(request.url).pathname,method=request.method;
@@ -62,6 +66,11 @@ async function handle(request,env) {
   if(!['GET','HEAD','OPTIONS'].includes(method)&&request.headers.has('Cookie')) {
     const origin=request.headers.get('Origin');
     if(request.headers.get('Sec-Fetch-Site')==='cross-site'||origin&&origin!==new URL(request.url).origin)return bad('Cross-origin request denied',403);
+  }
+  if(path==='/api/native/internal/email-jobs'&&method==='POST'){
+    const credential=request.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
+    if(!env.NATIVE_JOBS_SECRET||!equalHash(credential,env.NATIVE_JOBS_SECRET))return bad('Access denied',403);
+    return json({ok:true,...await processEmailJobs(env)});
   }
   const user=await actor(request,env);
   if(path==='/api/native/documents'&&method==='POST') {
@@ -87,7 +96,7 @@ async function handle(request,env) {
     const object=await bucket?.get(doc.storage_key);if(!object)return bad('Not found',404);
     return new Response(object.body,{headers:{'Content-Type':doc.mime_type,'Content-Disposition':`attachment; filename="${encodeURIComponent(doc.original_name||'document')}"`,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
   }
-  if(path==='/api/native/health'&&method==='GET')return json({ok:true,database:true,emailConfigured:directMailConfigured(env),turnstileConfigured:!!env.TURNSTILE_SECRET});
+  if(path==='/api/native/health'&&method==='GET')return json({ok:true,database:true,emailConfigured:directMailConfigured(env),emailOutboxConfigured:!!env.NATIVE_EMAIL_KEY,turnstileConfigured:!!env.TURNSTILE_SECRET});
   if(path==='/api/native/public/stats'&&method==='GET') {
     const stats=await db.prepare("SELECT (SELECT count(*) FROM companies) companies,(SELECT count(*) FROM companies WHERE role='vendor' AND verification_status='verified') vendors,(SELECT count(*) FROM rfqs WHERE status='quoting') open_rfqs,(SELECT count(*) FROM awards) awards").first();
     return json({ok:true,...stats});
@@ -147,7 +156,7 @@ async function handle(request,env) {
     const results=await db.batch([
       db.prepare("DELETE FROM sessions WHERE user_id IN (SELECT user_id FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?)").bind(hash,at),
       db.prepare("UPDATE users SET password_hash=?,password_salt=? WHERE id IN (SELECT user_id FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?)").bind(await passwordHash(body.password,salt),salt,hash,at),
-      db.prepare("UPDATE auth_tokens SET consumed_at=? WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?").bind(at,hash,at)
+      db.prepare("UPDATE auth_tokens SET consumed_at=? WHERE purpose='reset' AND consumed_at IS NULL AND user_id IN (SELECT user_id FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?)").bind(at,hash,at)
     ]);
     if(!results[2].meta.changes)return bad('Invalid reset token or password');
     await audit(db,{id:token.user_id},'user',token.user_id,'password_reset');return json({ok:true});
@@ -290,17 +299,17 @@ async function handle(request,env) {
   }
   const rfqMatch=path.match(/^\/api\/native\/rfqs\/([^/]+)$/);
   if(rfqMatch&&method==='GET') {
-    const error=requireRole(user,['client','vendor','admin']);if(error)return error;
+    const error=requireRole(user,['client','vendor','admin','public_owner']);if(error)return error;
     const rfq=await db.prepare('SELECT * FROM rfqs WHERE id=?').bind(rfqMatch[1]).first();if(!rfq)return bad('Not found',404);
     const client=rfq.client_company_id?await db.prepare('SELECT * FROM companies WHERE id=?').bind(rfq.client_company_id).first():null;
-    const isOwner=client?.owner_user_id===user.id, isAdmin=user.role==='admin';
+    const isOwner=client?.owner_user_id===user.id||user.role==='public_owner'&&user.public_request_id===rfq.public_request_id, isAdmin=user.role==='admin';
     const vendor=user.role==='vendor'?await db.prepare('SELECT id FROM companies WHERE owner_user_id=?').bind(user.id).first():null;
     const invited=vendor?await db.prepare('SELECT id FROM rfq_invitations WHERE rfq_id=? AND vendor_company_id=?').bind(rfq.id,vendor.id).first():null;
     if(!isOwner&&!isAdmin&&!invited)return bad('Access denied',403);
     const award=await db.prepare('SELECT * FROM awards WHERE rfq_id=?').bind(rfq.id).first();
     const isWinner=award?.vendor_company_id===vendor?.id;
-    const safe={id:rfq.id,reference:rfq.reference,title:rfq.title,category:rfq.category,scope:rfq.sanitized_scope,emirate:rfq.emirate,status:rfq.status,closing_at:rfq.closing_at};
-    if(isOwner||isAdmin||isWinner){safe.client=isOwner||isAdmin?client:{company_name:client?.company_name,contact_name:client?.contact_name,contact_email:client?.contact_email,phone:client?.phone};safe.location=rfq.location_private}
+    const safe={id:rfq.id,reference:rfq.reference,title:rfq.title,category:rfq.category,scope:rfq.sanitized_scope,emirate:rfq.emirate,status:rfq.status,closing_at:rfq.closing_at};if(isAdmin)safe.public_owner=!!rfq.public_request_id;
+    if(isOwner||isAdmin||isWinner){const publicClient=!client&&rfq.public_request_id?await db.prepare('SELECT name AS contact_name,email AS contact_email,phone FROM public_requests WHERE id=?').bind(rfq.public_request_id).first():null;safe.client=isOwner||isAdmin?client||publicClient:{company_name:client?.company_name,contact_name:client?.contact_name||publicClient?.contact_name,contact_email:client?.contact_email||publicClient?.contact_email,phone:client?.phone||publicClient?.phone};safe.location=rfq.location_private}
     const quotations=isOwner||isAdmin?await db.prepare('SELECT * FROM quotations WHERE rfq_id=? ORDER BY created_at').bind(rfq.id).all():{results:[]};
     safe.quotations=await Promise.all(quotations.results.map(async(q,index)=>{const response={id:q.id,amount_aed:q.amount_fils/100,notes:q.sanitized_notes,vendor_label:'Vendor '+String.fromCharCode(65+index)};if(isAdmin||award?.quotation_id===q.id){response.vendor=await db.prepare('SELECT company_name,contact_name,contact_email,phone FROM companies WHERE id=?').bind(q.vendor_company_id).first()}return response}));
     return json({ok:true,rfq:safe});
@@ -311,7 +320,14 @@ async function handle(request,env) {
     const row=await db.prepare('SELECT * FROM rfqs WHERE id=?').bind(publishMatch[1]).first();if(!row)return bad('Not found',404);
     if(row.status!=='under_review'||!row.sanitized_scope)return bad('RFQ is not ready to publish',409);
     if(scanIdentityLeakage({title:row.title,scope:row.sanitized_scope}).leaked)return bad('Work pack contains identifying details',422);
-    await db.prepare("UPDATE rfqs SET status='quoting',published_at=? WHERE id=?").bind(now(),row.id).run();await audit(db,user,'rfq',row.id,'published');return json({ok:true});
+    await db.prepare("UPDATE rfqs SET status='quoting',published_at=? WHERE id=?").bind(now(),row.id).run();await audit(db,user,'rfq',row.id,'published');const delivery=row.public_request_id?await sendOwnerLink(request,env,row):null;return json({ok:true,...(delivery?{owner_email_sent:delivery.success}:{})});
+  }
+  const ownerLink=path.match(/^\/api\/native\/admin\/rfqs\/([^/]+)\/owner-link$/);
+  if(ownerLink&&method==='POST'){
+    const error=requireRole(user,['admin']);if(error)return error;
+    const rfq=await db.prepare("SELECT * FROM rfqs WHERE id=? AND public_request_id IS NOT NULL AND status IN ('quoting','awarded')").bind(ownerLink[1]).first();
+    if(!rfq)return bad('Public RFQ not available',404);
+    const delivery=await sendOwnerLink(request,env,rfq);await audit(db,user,'rfq',rfq.id,'owner_link_sent',{emailSent:delivery.success});return json({ok:true,emailSent:delivery.success});
   }
   const inviteMatch=path.match(/^\/api\/native\/admin\/rfqs\/([^/]+)\/invite$/);
   if(inviteMatch&&method==='POST') {
@@ -332,8 +348,8 @@ async function handle(request,env) {
   }
   const awardMatch=path.match(/^\/api\/native\/rfqs\/([^/]+)\/award$/);
   if(awardMatch&&method==='POST') {
-    const error=requireRole(user,['client']);if(error)return error;
-    const rfq=await db.prepare('SELECT r.* FROM rfqs r JOIN companies c ON c.id=r.client_company_id WHERE r.id=? AND c.owner_user_id=?').bind(awardMatch[1],user.id).first();if(!rfq||rfq.status!=='quoting')return bad('RFQ is not available for award',403);
+    const error=requireRole(user,['client','public_owner']);if(error)return error;
+    const rfq=user.role==='public_owner'?await db.prepare('SELECT * FROM rfqs WHERE id=? AND public_request_id=?').bind(awardMatch[1],user.public_request_id).first():await db.prepare('SELECT r.* FROM rfqs r JOIN companies c ON c.id=r.client_company_id WHERE r.id=? AND c.owner_user_id=?').bind(awardMatch[1],user.id).first();if(!rfq||rfq.status!=='quoting')return bad('RFQ is not available for award',403);
     const q=await db.prepare('SELECT * FROM quotations WHERE id=? AND rfq_id=?').bind(body.quotation_id,rfq.id).first();if(!q)return bad('Quotation not found',404);
     const existing=await db.prepare('SELECT id FROM awards WHERE rfq_id=?').bind(rfq.id).first();if(existing)return bad('RFQ already awarded',409);
     const fee=calculateVendorServiceCharge({category:rfq.category,awardedValue:q.amount_fils/100,labourers:q.labourer_count,hoursPerLabourer:q.hours_per_labourer});

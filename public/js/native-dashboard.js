@@ -27,6 +27,7 @@ function requests(){const list=data.rfqs||[];if(role==='client')document.getElem
   if(role==='admin')adminRequests()
 }
 async function detail(r){const v=await api('rfqs/'+encodeURIComponent(r.id));content.replaceChildren();document.getElementById('sectionTitle').textContent=v.rfq.title;content.append(box('Approved work pack',element('p',v.rfq.scope)));if(v.rfq.client)content.append(box('Contact released after award',element('p',`${v.rfq.client.company_name||''} ${v.rfq.client.contact_email||''} ${v.rfq.client.phone||''}`)));
+  if(role==='admin'&&v.rfq.public_owner)content.append(btn('Send owner access link',async()=>{const result=await api(`admin/rfqs/${r.id}/owner-link`,{method:'POST',body:{}});show(result.emailSent?'Owner access email sent.':'Owner access email queued for delivery.')}));
   if(role==='vendor')content.append(btn('Submit quotation',()=>quote(r)));
   if(role==='client'||role==='admin')content.append(box('Quotations',table(['Vendor','Price','Notes','Decision'],v.rfq.quotations,[q=>q.vendor?.company_name||q.vendor_label,q=>aed(q.amount_aed*100),q=>q.notes, q=>role==='client'?btn('Award',async()=>{if(!confirm('Award this quotation? Contact details will be released to the selected parties.'))return;await api(`rfqs/${r.id}/award`,{method:'POST',body:{quotation_id:q.id}});await refresh();show('Award recorded.')},true):'—'])));
   document.getElementById('headingActions').append(btn('Back',()=>navigate('rfqs'),true))

@@ -87,5 +87,6 @@ if (process.env.PREVIEW_ONLY === "1") {
 }
 writeFileSync(join(dist, "build-stamp.json"), JSON.stringify({
   stamp: BUILD_STAMP,
+  commit: process.env.CF_PAGES_COMMIT_SHA || spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).stdout?.trim() || null,
   builtAt: new Date().toISOString()
 }, null, 2));
