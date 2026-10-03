@@ -16,6 +16,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@noble/hashes": "^2.4.0",
     "@supabase/supabase-js": "^2.39.0"
   },
   "devDependencies": {

@@ -9,7 +9,7 @@ export const PAGE_ROUTES = Object.freeze({
   '/vendor/quotations': '/dashboard-vendor.html', '/vendor/awards': '/dashboard-vendor.html',
   '/vendor/messages': '/dashboard-vendor.html', '/vendor/settings': '/dashboard-vendor.html',
   '/admin/dashboard': '/dashboard-admin.html', '/admin/growth': '/dashboard-admin.html', '/admin/documents': '/dashboard-admin.html', '/admin/vendors': '/dashboard-admin.html',
-  '/admin/users': '/dashboard-admin.html', '/admin/rfqs': '/dashboard-admin.html',
+  '/admin/contractors': '/dashboard-admin.html', '/admin/users': '/dashboard-admin.html', '/admin/rfqs': '/dashboard-admin.html',
   '/admin/awards': '/dashboard-admin.html', '/admin/invoices': '/dashboard-admin.html', '/admin/site-visits': '/dashboard-admin.html',
   '/admin/stats': '/dashboard-admin.html', '/admin/settings': '/dashboard-admin.html',
   '/rfq/new': '/public-rfq.html', '/how': '/how.html', '/vendors': '/vendors.html', '/reviews': '/reviews.html', '/faq': '/faq.html', '/support': '/support.html',

@@ -14,11 +14,11 @@ const form=(fields,submit,handler)=>{const f=document.createElement('form');f.cl
 async function uploadDocument(kind,ownerId,file){const fd=new FormData();fd.set('kind',kind);fd.set('owner_id',ownerId);fd.set('file',file);return api('documents',{method:'POST',body:fd})}
 async function refresh(){data=await api('workspace');render()}
 function navigate(name,historyUpdate=true){view=name;if(historyUpdate)history.pushState(null,'',base+name);render();document.getElementById('workSide').classList.remove('open')}
-function render(){content.replaceChildren();document.getElementById('headingActions').replaceChildren();notice.hidden=true;const titles={dashboard:'Overview',rfqs:'Requests',projects:'Projects',quotations:'Quotations',invitations:'Invitations',awards:'Awards',vendors:'Vendor verification',users:'Accounts',documents:'Documents',messages:'Updates','site-visits':'Site visits',settings:'Account'};document.getElementById('sectionTitle').textContent=titles[view]||'Overview';document.getElementById('sectionIntro').textContent=role==='admin'?'Review requests, site visits, vendor accounts and work packs.':role==='client'?'Post requirements and compare quotations.':'Respond to your invitations and track awards.';document.querySelectorAll('.work-nav a').forEach(a=>a.classList.toggle('active',a.dataset.route===view));
+function render(){content.replaceChildren();document.getElementById('headingActions').replaceChildren();notice.hidden=true;const titles={dashboard:'Overview',rfqs:'Requests',projects:'Projects',quotations:'Quotations',invitations:'Invitations',awards:'Awards',vendors:'Vendor verification',contractors:'Contractor verification',users:'Accounts',documents:'Documents',messages:'Updates','site-visits':'Site visits',settings:'Account'};document.getElementById('sectionTitle').textContent=titles[view]||'Overview';document.getElementById('sectionIntro').textContent=role==='admin'?'Review requests, site visits, contractor and vendor accounts, and work packs.':role==='client'?'Post requirements and compare quotations.':'Respond to your invitations and track awards.';document.querySelectorAll('.work-nav a').forEach(a=>a.classList.toggle('active',a.dataset.route===view));
   if(view==='dashboard'){const p=element('p',`${data.rfqs.length} requests · ${data.quotations.length} quotations · ${data.awards.length} awards`);content.append(box('Current activity',p));if(role==='admin')adminOverview();else requests();return}
   if(['rfqs','projects','invitations'].includes(view))return requests();
   if(view==='quotations')return quotations();if(view==='awards')return awards();
-  if(role==='admin'){if(view==='vendors'||view==='users')return accounts();if(view==='documents')return adminDocuments();if(view==='messages'||view==='site-visits')return siteVisits()}
+  if(role==='admin'){if(view==='vendors'||view==='contractors'||view==='users')return accounts();if(view==='documents')return adminDocuments();if(view==='messages'||view==='site-visits')return siteVisits()}
   if(view==='settings')return settings();
   content.append(box('Updates',element('p','Status changes appear in your request and award lists.')))
 }
@@ -42,7 +42,35 @@ async function adminRequests(){try{const result=await api('admin/public-requests
 async function adminDocuments(){try{const result=await api('admin/documents');content.append(box('Uploaded documents',table(['File','Type','Owner','Uploaded','Size','Action'],result.documents,[d=>d.original_name,d=>d.owner_kind,d=>d.owner_reference||d.owner_title||d.owner_id,d=>d.created_at,d=>`${Math.ceil(Number(d.size_bytes||0)/1024)} KB`,d=>{const a=document.createElement('a');a.className='action-secondary';a.href='/api/native/documents/'+encodeURIComponent(d.id);a.target='_blank';a.rel='noopener';a.textContent='Open';return a}])))}catch(e){show(e.message,true)}}
 function prepare(p){content.replaceChildren();document.getElementById('sectionTitle').textContent='Prepare RFQ · '+p.reference;content.append(box('Client details',element('p',`${p.name} · ${p.phone} · ${p.email} · ${p.location}`)));content.append(box('Original requirement (private)',element('p',p.scope)));content.append(box('Reviewed vendor work pack',form([field('title','Title',{value:p.title}),field('category','Category',{value:p.category}),field('sanitized_scope','Sanitized scope',{type:'textarea'})],'Create RFQ',async v=>{await api('rfqs',{method:'POST',body:{...v,public_request_id:p.id}});navigate('rfqs')})))}
 async function invite(r){const result=await api('admin/accounts');const approved=result.accounts.filter(x=>x.role==='vendor'&&x.verification_status==='verified');content.replaceChildren();const container=document.createElement('div');const select=document.createElement('select');select.setAttribute('aria-label','Select verified vendor');approved.forEach(v=>{const option=new Option(v.company_name,v.company_id);select.append(option)});container.append(select,btn('Invite',async()=>{await api(`admin/rfqs/${r.id}/invite`,{method:'POST',body:{vendor_company_id:select.value}});await refresh();show('Vendor invited.')}));content.append(box('Invite a verified vendor',container))}
-async function accounts(){try{const result=await api('admin/accounts');content.append(box('Accounts and licences',table(['Company','User','Contact','Licence','Emirate','Status','Actions'],result.accounts,[a=>a.company_name||'Admin',a=>`${a.email} · ${a.role}`,a=>a.company_id?`${a.contact_name||''} · ${a.contact_email||''} · ${a.phone||''}`:'—',a=>a.trade_license_no||'—',a=>a.emirate||'—',a=>a.verification_status||'—',a=>buttons(...(a.verified_at?[]:[btn('Verify email',async()=>{await api(`admin/accounts/${a.user_id}/verify`,{method:'POST'});accounts()},true)]),...(a.company_id?['verified','rejected'].map(status=>btn(status==='verified'?'Approve':'Reject',async()=>{await api(`admin/companies/${a.company_id}/verify`,{method:'POST',body:{status}});accounts()},true)):[]))])))}catch(e){show(e.message,true)}}
+async function accounts(){
+  try{
+    const result=await api('admin/accounts');
+    const rows=(result.accounts||[]).filter(a=>{
+      if(view==='vendors') return a.role==='vendor' && a.company_id;
+      if(view==='contractors') return a.role==='client' && a.company_id;
+      return true;
+    }).sort((a,b)=>(a.verification_status==='pending'?0:1)-(b.verification_status==='pending'?0:1));
+    const title=view==='vendors'?'Vendor approvals':view==='contractors'?'Contractor approvals':'Accounts and licences';
+    const actions=a=>{
+      const nodes=[];
+      if(!a.verified_at) nodes.push(btn('Verify email',async()=>{await api('admin/accounts/'+a.user_id+'/verify',{method:'POST'});accounts()},true));
+      if(a.company_id){
+        nodes.push(btn('Approve',async()=>{await api('admin/companies/'+a.company_id+'/verify',{method:'POST',body:{status:'verified'}});show('Approved.');accounts()},true));
+        nodes.push(btn('Reject',async()=>{await api('admin/companies/'+a.company_id+'/verify',{method:'POST',body:{status:'rejected'}});show('Rejected.');accounts()},true));
+      }
+      return buttons(...nodes);
+    };
+    content.append(box(title,table(['Company','User','Contact','Licence','Emirate','Status','Actions'],rows,[
+      a=>a.company_name||'Admin',
+      a=>a.email+' · '+(a.role==='client'?'contractor':a.role),
+      a=>a.company_id?((a.contact_name||'')+' · '+(a.contact_email||'')+' · '+(a.phone||'')):'—',
+      a=>a.trade_license_no||'—',
+      a=>a.emirate||'—',
+      a=>a.verification_status||'—',
+      actions
+    ])));
+  }catch(e){show(e.message,true)}
+}
 async function siteVisits(){try{const result=await api('admin/site-visits');content.append(box('Site visits · AED 100',table(['Reference','Client','Payment','Status','Actions'],result.visits,[v=>v.reference,v=>`${v.name} · ${v.phone}`,v=>v.payment_status,v=>v.status,v=>btn('Update',()=>editVisit(v),true)])))}catch(e){show(e.message,true)}}
 function editVisit(v){content.replaceChildren();document.getElementById('sectionTitle').textContent='Site visit · '+v.reference;content.append(box('Payment and inspection',form([field('payment_status','Payment state (unpaid, pending_manual, paid, waived, refunded)',{value:v.payment_status}),field('payment_reference','Payment reference',{value:v.payment_reference||'',required:false}),field('appointment_at','Appointment',{type:'datetime-local',value:v.appointment_at||'',required:false}),field('status','Visit status',{value:v.status}),field('inspection_notes','Inspection notes',{type:'textarea',value:v.inspection_notes||'',required:false}),field('measurements','Measurements',{type:'textarea',value:v.measurements||'',required:false})],'Save visit',async values=>{await api(`admin/site-visits/${v.id}`,{method:'PATCH',body:values});navigate('messages')})))}
 function settings(){if(role==='admin')return content.append(box('Admin account',element('p',data.user.email)));if(!data.profile)return content.append(box('Company profile',element('p','No company profile found.')));const wrap=document.createElement('div');wrap.append(element('p',`${data.profile.company_name} · ${data.profile.verification_status}`));if(role==='vendor'){const f=document.createElement('form');f.className='form-grid';f.append(fileField('document','Trade licence copy'));const b=document.createElement('button');b.className='action-primary';b.textContent='Upload licence';f.append(b);f.onsubmit=async e=>{e.preventDefault();b.disabled=true;try{const file=firstFile(f,'document');if(!file)throw Error('Choose a PDF, JPEG or PNG file.');await uploadDocument('company',data.profile.id,file);f.reset();show('Licence uploaded for admin review.')}catch(err){show(err.message,true)}finally{b.disabled=false}};wrap.append(f)}content.append(box('Company profile',wrap))}

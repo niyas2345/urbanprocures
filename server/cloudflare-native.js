@@ -1,6 +1,7 @@
 import { calculateVendorServiceCharge } from './commercial/service-fee.js';
 import { ZohoEmailProvider } from './ai/outreach-provider.js';
 import { scanIdentityLeakage } from './ai/identity-scan.js';
+import { passwordHash, verifyPassword } from './passwords.js';
 
 const json = (data, status=200) => new Response(JSON.stringify(data), {status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
 const bad = (message,status=400) => json({ok:false,error:message},status);
@@ -12,10 +13,6 @@ const b64 = bytes => btoa(String.fromCharCode(...bytes));
 const random = () => b64(crypto.getRandomValues(new Uint8Array(32))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
 const sessionToken = request => request.headers.get('Cookie')?.match(/(?:^|;\s*)up_session=([^;]+)/)?.[1] || request.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
 
-async function passwordHash(password,salt) {
-  const input=`urban-procures-native-v1:${salt}:${password}`;
-  return sha(input);
-}
 async function actor(request,env) {
   const token=sessionToken(request);
   if(!token)return null;
@@ -113,14 +110,20 @@ async function handle(request,env) {
     await audit(db,{id:uid},'user',uid,'registration',{role,emailSent:delivery.success});return json({ok:true,verificationRequired:true,emailSent:delivery.success},201);
   }
   if(path==='/api/native/auth/verify'&&method==='POST') {
-    const token=await db.prepare("SELECT * FROM auth_tokens WHERE token_hash=? AND purpose='verify' AND consumed_at IS NULL AND expires_at>?").bind(await sha(clean(body.token,200)),now()).first();if(!token)return bad('Invalid or expired token');
-    await db.batch([db.prepare('UPDATE auth_tokens SET consumed_at=? WHERE id=?').bind(now(),token.id),db.prepare('UPDATE users SET verified_at=? WHERE id=?').bind(now(),token.user_id)]);return json({ok:true});
+    const hash=await sha(clean(body.token,200)),at=now();
+    const results=await db.batch([
+      db.prepare("UPDATE users SET verified_at=? WHERE id IN (SELECT user_id FROM auth_tokens WHERE token_hash=? AND purpose='verify' AND consumed_at IS NULL AND expires_at>?)").bind(at,hash,at),
+      db.prepare("UPDATE auth_tokens SET consumed_at=? WHERE token_hash=? AND purpose='verify' AND consumed_at IS NULL AND expires_at>?").bind(at,hash,at)
+    ]);
+    return results[1].meta.changes?json({ok:true}):bad('Invalid or expired token');
   }
   if(path==='/api/native/auth/login'&&method==='POST') {
     if(!await limitAttempts(db,request,env,'login',10))return bad('Too many sign-in attempts. Try again later',429);
     const row=await db.prepare('SELECT * FROM users WHERE email=?').bind(clean(body.email,200).toLowerCase()).first();
-    if(!row||await passwordHash(String(body.password||''),row.password_salt)!==row.password_hash)return bad('Invalid credentials',401);
+    const check=row?await verifyPassword(String(body.password||''),row.password_salt,row.password_hash):{valid:false};
+    if(!check.valid)return bad('Invalid credentials',401);
     if(!row.verified_at)return bad('Email verification required',403);
+    if(check.upgrade){const salt=random();const updated=await db.prepare('UPDATE users SET password_hash=?,password_salt=? WHERE id=? AND password_hash=?').bind(await passwordHash(String(body.password),salt),salt,row.id,row.password_hash).run();if(!updated.meta.changes)return bad('Please sign in again',409);}
     return sessionResponse(row,await issueSession(db,row));
   }
   if(path==='/api/native/auth/logout'&&method==='POST') {
@@ -135,9 +138,16 @@ async function handle(request,env) {
     return json({ok:true});
   }
   if(path==='/api/native/auth/reset/confirm'&&method==='POST') {
-    const token=await db.prepare("SELECT * FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?").bind(await sha(clean(body.token,200)),now()).first();
-    if(!token||String(body.password||'').length<12)return bad('Invalid reset token or password');
-    const salt=random();await db.batch([db.prepare('UPDATE users SET password_hash=?,password_salt=? WHERE id=?').bind(await passwordHash(body.password,salt),salt,token.user_id),db.prepare('UPDATE auth_tokens SET consumed_at=? WHERE id=?').bind(now(),token.id),db.prepare('DELETE FROM sessions WHERE user_id=?').bind(token.user_id)]);
+    if(String(body.password||'').length<12)return bad('Invalid reset token or password');
+    const hash=await sha(clean(body.token,200)),at=now(),salt=random();
+    const token=await db.prepare("SELECT user_id FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?").bind(hash,at).first();
+    if(!token)return bad('Invalid reset token or password');
+    const results=await db.batch([
+      db.prepare("DELETE FROM sessions WHERE user_id IN (SELECT user_id FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?)").bind(hash,at),
+      db.prepare("UPDATE users SET password_hash=?,password_salt=? WHERE id IN (SELECT user_id FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?)").bind(await passwordHash(body.password,salt),salt,hash,at),
+      db.prepare("UPDATE auth_tokens SET consumed_at=? WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?").bind(at,hash,at)
+    ]);
+    if(!results[2].meta.changes)return bad('Invalid reset token or password');
     await audit(db,{id:token.user_id},'user',token.user_id,'password_reset');return json({ok:true});
   }
   if(path==='/api/native/auth/me'&&method==='GET')return user?json({ok:true,user}):bad('Authentication required',401);
@@ -330,4 +340,4 @@ async function handle(request,env) {
   }
   return bad('Not found',404);
 }
-export async function handleNative(request,env) {try{return await handle(request,env)}catch(error){console.error('Native API failure',error?.name,error?.message);return bad('Request could not be completed',500)}}
+export async function handleNative(request,env) {try{return await handle(request,env)}catch(error){if(error?.name==='PasswordCapacityError')return bad('Sign-in is busy. Please try again shortly',503);console.error('Native API failure',error?.name,error?.message);return bad('Request could not be completed',500)}}
