@@ -34,7 +34,8 @@ function directMailConfigured(env) {
 }
 async function issueSession(db,user) {
   const token=random();const expires=new Date(Date.now()+7*86400000).toISOString();
-  await db.prepare('INSERT INTO sessions(id,user_id,token_hash,expires_at) VALUES(?,?,?,?)').bind(id(),user.id,await sha(token),expires).run();
+  const inserted=await db.prepare('INSERT INTO sessions(id,user_id,token_hash,expires_at) SELECT ?,id,?,? FROM users WHERE id=? AND password_hash=?').bind(id(),await sha(token),expires,user.id,user.password_hash).run();
+  if(!inserted.meta.changes){const error=new Error('Credentials changed');error.name='AuthChangedError';throw error;}
   return {token,expires};
 }
 function sessionResponse(user,session,status=200) {
@@ -95,7 +96,7 @@ async function handle(request,env) {
   if(path==='/api/native/auth/register'&&method==='POST') {
     if(!await limitAttempts(db,request,env,'register',5))return bad('Please try again later',429);
     const address=clean(body.email,200).toLowerCase(),role=clean(body.role,20);
-    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)||!['client','vendor'].includes(role)||String(body.password||'').length<12)return bad('Valid email, role and password of at least 12 characters required');
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)||!['client','vendor'].includes(role)||(String(body.password||'').length<12||String(body.password||'').length>4096))return bad('Valid email, role and password of at least 12 characters required');
     if(role==='vendor' && body.accept_vendor_terms!==true)return bad('Vendor Terms acceptance is required');
     const salt=random(),uid=id(),companyId=id();
     const agreement=role==='vendor'?await db.prepare("SELECT version,agreement_hash FROM agreement_versions WHERE kind='vendor' AND active=1").first():null;
@@ -119,11 +120,12 @@ async function handle(request,env) {
   }
   if(path==='/api/native/auth/login'&&method==='POST') {
     if(!await limitAttempts(db,request,env,'login',10))return bad('Too many sign-in attempts. Try again later',429);
+    if(String(body.password||'').length>4096)return bad('Invalid credentials',401);
     const row=await db.prepare('SELECT * FROM users WHERE email=?').bind(clean(body.email,200).toLowerCase()).first();
     const check=row?await verifyPassword(String(body.password||''),row.password_salt,row.password_hash):{valid:false};
     if(!check.valid)return bad('Invalid credentials',401);
     if(!row.verified_at)return bad('Email verification required',403);
-    if(check.upgrade){const salt=random();const updated=await db.prepare('UPDATE users SET password_hash=?,password_salt=? WHERE id=? AND password_hash=?').bind(await passwordHash(String(body.password),salt),salt,row.id,row.password_hash).run();if(!updated.meta.changes)return bad('Please sign in again',409);}
+    if(check.upgrade){const salt=random(),hash=await passwordHash(String(body.password),salt);const updated=await db.prepare('UPDATE users SET password_hash=?,password_salt=? WHERE id=? AND password_hash=?').bind(hash,salt,row.id,row.password_hash).run();if(!updated.meta.changes)return bad('Please sign in again',409);row.password_hash=hash;row.password_salt=salt;}
     return sessionResponse(row,await issueSession(db,row));
   }
   if(path==='/api/native/auth/logout'&&method==='POST') {
@@ -138,7 +140,7 @@ async function handle(request,env) {
     return json({ok:true});
   }
   if(path==='/api/native/auth/reset/confirm'&&method==='POST') {
-    if(String(body.password||'').length<12)return bad('Invalid reset token or password');
+    if((String(body.password||'').length<12||String(body.password||'').length>4096))return bad('Invalid reset token or password');
     const hash=await sha(clean(body.token,200)),at=now(),salt=random();
     const token=await db.prepare("SELECT user_id FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?").bind(hash,at).first();
     if(!token)return bad('Invalid reset token or password');
@@ -340,4 +342,4 @@ async function handle(request,env) {
   }
   return bad('Not found',404);
 }
-export async function handleNative(request,env) {try{return await handle(request,env)}catch(error){if(error?.name==='PasswordCapacityError')return bad('Sign-in is busy. Please try again shortly',503);console.error('Native API failure',error?.name,error?.message);return bad('Request could not be completed',500)}}
+export async function handleNative(request,env) {try{return await handle(request,env)}catch(error){if(error?.name==='AuthChangedError')return bad('Credentials changed. Please sign in again',401);if(error?.name==='PasswordCapacityError')return bad('Sign-in is busy. Please try again shortly',503);console.error('Native API failure',error?.name,error?.message);return bad('Request could not be completed',500)}}

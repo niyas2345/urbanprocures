@@ -29,3 +29,18 @@ for(const purpose of ['verify','reset'])test(`${purpose} token authorizes only o
   assert.equal((await handleNative(request(passwords[0]),{URBAN_PROCURE_DB:db})).status,400);
   sql.close();
 });
+test('legacy login upgrades the password and creates a session guarded by current credentials',async()=>{
+  const {sql,db}=database();
+  const password='legacy account password';
+  const hash=Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`urban-procures-native-v1:salt:${password}`))).toString('hex');
+  sql.prepare('INSERT INTO users(id,email,password_hash,password_salt,role,verified_at) VALUES(?,?,?,?,?,?)').run('u','legacy@example.test',hash,'salt','client','2026-01-01');
+  const request=()=>new Request('https://app.test/api/native/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'legacy@example.test',password})});
+  assert.equal((await handleNative(request(),{URBAN_PROCURE_DB:db})).status,200);
+  assert.match(sql.prepare('SELECT password_hash FROM users').get().password_hash,/^scrypt\$/);
+  assert.equal(sql.prepare('SELECT count(*) AS total FROM sessions').get().total,1);
+  const prepare=db.prepare;
+  db.prepare=text=>{if(text.startsWith('INSERT INTO sessions'))sql.prepare("UPDATE users SET password_hash='changed-by-reset'").run();return prepare(text)};
+  assert.equal((await handleNative(request(),{URBAN_PROCURE_DB:db})).status,401);
+  assert.equal(sql.prepare('SELECT count(*) AS total FROM sessions').get().total,1);
+  sql.close();
+});
