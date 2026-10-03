@@ -4,6 +4,8 @@ Status: incomplete; production readiness is not established.
 
 ## Verified observations
 
+- Owner identified `urbanprocures-dev` as the latest Cloudflare Pages project. `https://urbanprocures-dev.pages.dev/` rendered the same homepage content as production; its build stamp and builtAt match production exactly. Its native health endpoint also reports database, email and Turnstile configured. This identifies the correct project name but does not establish Git source commit or private backend configuration.
+
 - `https://www.urbanprocures.com/` returned HTTP 200 and rendered the current homepage in the cloud browser. Preserve that design and original logo.
 - Homepage Get quotes navigation reached `/rfq/new`. Submitting the empty form focused Full Name without creating a request.
 - Sign-in navigation reached `/signin` with the client/vendor/admin entry point.
