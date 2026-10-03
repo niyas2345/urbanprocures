@@ -23,6 +23,7 @@ for(const purpose of ['verify','reset'])test(`${purpose} token authorizes only o
   assert.deepEqual(responses.map(r=>r.status).sort(),[200,400]);
   if(purpose==='reset'){
     const row=sql.prepare('SELECT * FROM users').get();
+    assert.ok(row.verified_at,'mailbox reset proof recovers an account with expired verification');
     assert.equal((await verifyPassword(passwords[responses.findIndex(r=>r.status===200)],row.password_salt,row.password_hash)).valid,true);
     assert.equal(sql.prepare('SELECT count(*) AS total FROM sessions').get().total,0);
   }

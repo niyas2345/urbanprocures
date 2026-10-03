@@ -166,7 +166,7 @@ async function handle(request,env) {
     if(!token)return bad('Invalid reset token or password');
     const results=await db.batch([
       db.prepare("DELETE FROM sessions WHERE user_id IN (SELECT user_id FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?)").bind(hash,at),
-      db.prepare("UPDATE users SET password_hash=?,password_salt=? WHERE id IN (SELECT user_id FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?)").bind(await passwordHash(body.password,salt),salt,hash,at),
+      db.prepare("UPDATE users SET password_hash=?,password_salt=?,verified_at=COALESCE(verified_at,?) WHERE id IN (SELECT user_id FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?)").bind(await passwordHash(body.password,salt),salt,at,hash,at),
       db.prepare("UPDATE auth_tokens SET consumed_at=? WHERE purpose='reset' AND consumed_at IS NULL AND user_id IN (SELECT user_id FROM auth_tokens WHERE token_hash=? AND purpose='reset' AND consumed_at IS NULL AND expires_at>?)").bind(at,hash,at)
     ]);
     if(!results[2].meta.changes)return bad('Invalid reset token or password');
@@ -196,7 +196,7 @@ async function handle(request,env) {
     if(!await verifyTurnstile(body.turnstile_token,request,env))return bad('Verification required',403);
     if(!await limitAttempts(db,request,env,'public_request',5))return bad('Please try again later',429);
     const name=clean(body.name,160),phone=clean(body.phone,60),address=clean(body.location,500),title=clean(body.title,220),scope=clean(body.scope,20000),category=clean(body.category,120),addressEmail=clean(body.email,200);
-    if(!name||!phone||!address||!title||!scope||!category||!addressEmail)return bad('Complete all required request details');
+    if(!name||!phone||!address||!title||!scope||!category||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(addressEmail))return bad('Complete all required request details with a valid email');
     const rid=id(),reference='UP-'+crypto.randomUUID().slice(0,8).toUpperCase(),uploadToken=random();
     const visit=body.site_visit===true;
     const statements=[db.prepare('INSERT INTO public_requests(id,reference,name,phone,email,location,category,title,scope,visit_requested,upload_token_hash) VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(rid,reference,name,phone,addressEmail,address,category,title,scope,visit?1:0,await sha(uploadToken))];
@@ -352,7 +352,8 @@ async function handle(request,env) {
     const error=requireRole(user,['vendor']);if(error)return error;
     const vendor=await db.prepare("SELECT * FROM companies WHERE owner_user_id=? AND role='vendor' AND verification_status='verified'").bind(user.id).first();if(!vendor)return bad('Vendor verification required',403);
     const invitation=await db.prepare('SELECT r.id,r.category FROM rfq_invitations i JOIN rfqs r ON r.id=i.rfq_id WHERE i.rfq_id=? AND i.vendor_company_id=? AND r.status=?').bind(quoteMatch[1],vendor.id,'quoting').first();if(!invitation)return bad('Invitation required',403);
-    const amount=Number(body.amount_aed);if(!Number.isFinite(amount)||amount<0)return bad('Valid quotation amount required');
+    const amount=Number(body.amount_aed);if(!Number.isFinite(amount)||amount<0||!Number.isSafeInteger(Math.round(amount*100)))return bad('Valid quotation amount required');
+    try{calculateVendorServiceCharge({category:invitation.category,awardedValue:amount,labourers:body.labourer_count,hoursPerLabourer:body.hours_per_labourer})}catch{return bad('Valid labourer count and hours per labourer are required')}
     if(scanIdentityLeakage(clean(body.sanitized_notes,10000)).leaked)return bad('Quotation contains identifying details',422);
     const qid=id();await db.prepare('INSERT INTO quotations(id,rfq_id,vendor_company_id,amount_fils,sanitized_notes,private_notes,labourer_count,hours_per_labourer) VALUES(?,?,?,?,?,?,?,?)').bind(qid,invitation.id,vendor.id,Math.round(amount*100),clean(body.sanitized_notes,10000),clean(body.private_notes,10000),body.labourer_count||null,body.hours_per_labourer||null).run();
     await audit(db,user,'quotation',qid,'submitted');return json({ok:true,id:qid},201);
